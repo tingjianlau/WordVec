@@ -21,17 +21,19 @@ using namespace std;
 typedef float real;
 
 struct Word {
-  int64_t freq;
+  size_t freq;
   int *point;
   string word;
   char* code;
   int codelen;
-  Word(string w, int64_t f) :
+
+  Word(string w, size_t f) :
       freq(f), word(w) {
     point = NULL;
     code = NULL;
     codelen = 0;
   }
+
   bool operator <(const Word &rhs) const {
     return this->freq > rhs.freq;
   }
@@ -39,9 +41,10 @@ struct Word {
 
 class Vocabulary {
 public:
+  const size_t MIN_WORD_FREQ;
+
   Vocabulary(size_t min_word_freq = 5) :
-      _min_word_freq(min_word_freq) {
-    // initialize hash table
+      MIN_WORD_FREQ(min_word_freq) {
   }
 
   bool AddWord(const string &word) {
@@ -88,7 +91,7 @@ public:
   void ReduceVocab() {
     int last_idx = vocab.size() - 1;
     while (last_idx-- >= 0) {
-      if (vocab[last_idx].freq < _min_word_freq) {
+      if (vocab[last_idx].freq < MIN_WORD_FREQ) {
         word2pos.erase(vocab[last_idx].word);
         vocab.pop_back();
       } else {
@@ -97,7 +100,14 @@ public:
     }
   }
 
-  void ReadWord(string &word, FILE* fin) {
+  uint32_t GetWordIndex(const string &word) {
+    if (word2pos.find(word) != word2pos.find(word)) {
+      return word2pos[word];
+    }
+    return -1;
+  }
+
+  static void ReadWord(string &word, FILE* fin) {
     word.clear();
     char ch;
     while (!feof(fin)) {
@@ -117,22 +127,25 @@ private:
   unordered_map<string, uint32_t> word2pos;
   vector<Word> vocab;
 
-  const size_t _min_word_freq;
 };
 
 class WordVec {
 public:
-  WordVec(int hidden_layer_size) :
-      _hidden_layer_size(hidden_layer_size) {
 
-    _hierachical_softmax = true;
-    _negative_sampling = false;
+  WordVec(int hidden_layer_size = 100, size_t max_sentence_size = 10) :
+      HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
 
+    HIERACHICAL_SOFTMAX = true;
+    NEGATIVE_SAMPLING = false;
+
+    CBOW = true;
+    SKIP_GRAM = false;
     InitializeNetwork();
   }
 
   ~WordVec() {
-
+    delete[] _syn0;
+    delete[] _syn1;
   }
 
   void LoadVocabulary(const string &file_name) {
@@ -141,43 +154,73 @@ public:
   }
 
   void InitializeNetwork() {
-    posix_memalign((void **) &syn0, 128,
-                   voc.Size() * _hidden_layer_size * sizeof(real));
-    if (syn0 == NULL) {
-      fprintf(stderr, "Memory allocation failed!\n");
-      exit(1);
-    }
+    // Initialize synapsis for input layer
+    _syn0 = new real[voc.Size() * HIDDEN_LAYER_SIZE];
 
-    for (size_t hid_idx = 0; hid_idx < _hidden_layer_size; ++hid_idx) {
+    for (size_t hid_idx = 0; hid_idx < HIDDEN_LAYER_SIZE; ++hid_idx) {
       for (size_t in_idx = 0; in_idx < voc.Size(); in_idx++) {
-        syn0[in_idx * _hidden_layer_size + hid_idx] = (rand() / (real) RAND_MAX
-            - 0.5) / _hidden_layer_size;
+        _syn0[in_idx * HIDDEN_LAYER_SIZE + hid_idx] = (rand() / (real) RAND_MAX
+            - 0.5) / HIDDEN_LAYER_SIZE;
       }
     }
 
-    if (_hierachical_softmax) {
-      posix_memalign((void **) &syn1, 128,
-                     voc.Size() * _hidden_layer_size * sizeof(real));
-      if (syn1 == NULL) {
-        fprintf(stderr, "Memory allocation failed!\n");
-        exit(1);
-      }
+    // Initialize synapsis for output layer
+    if (HIERACHICAL_SOFTMAX) {
+      _syn1 = new real[voc.Size() * HIDDEN_LAYER_SIZE * sizeof(real)];
     }
 
     //TODO: Negative Sampling Network Initialize
   }
 
+  void TrainModelWithFile(const string &file_name, uint64_t &random_seed) {
+    int window = 5;
+    uint64_t next_rand = random_seed;
+    FILE *fi = fopen(file_name.c_str(), "r");
+    if (fi == NULL) {
+      fprintf(stderr, "No such training file: %s", file_name.c_str());
+    }
+
+    // Initialize neure
+    real* neu1 = new real[HIDDEN_LAYER_SIZE];
+    real* neu1e = new real[HIDDEN_LAYER_SIZE];
+
+    vector<uint32_t> sentence;
+    string word;
+    while (!feof(fi)) {
+      if (sentence.empty()) {
+        while (sentence.size() < MAX_SENTENCE_SIZE && !feof(fi)) {
+          Vocabulary::ReadWord(word, fi);
+          uint32_t word_idx = voc.GetWordIndex(word);
+          if (word_idx == -1)
+            continue;
+          sentence.push_back(word_idx);
+          // TODO: do subsampling to discards frequent words
+        }
+      }
+      memset(neu1, 0, HIDDEN_LAYER_SIZE * sizeof(real));
+      memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
+      next_rand = next_rand * (uint64_t) 25214903917 + 11;
+      if (CBOW) {
+
+      }
+    }
+  }
+
+  //configure
+  const size_t MAX_SENTENCE_SIZE;
+  const int HIDDEN_LAYER_SIZE;
+
+  bool HIERACHICAL_SOFTMAX;
+  bool NEGATIVE_SAMPLING;
+  bool CBOW;
+  bool SKIP_GRAM;
+
 private:
   Vocabulary voc;
-  real* syn0;
-  real* syn1;
-  real alpha = 0.025;
-  real start_alpha;
-
-  bool _hierachical_softmax;
-  bool _negative_sampling;
-
-  const int _hidden_layer_size;
+  real* _syn0;  //synapsis for input layer
+  real* _syn1;  //synapsis for output layer
+  real _alpha = 0.025;
+  real _start_alpha;
 };
 
 int main() {
