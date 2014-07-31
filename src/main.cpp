@@ -5,17 +5,6 @@
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <queue>
-#include <cmath>
-#include <algorithm>
-#include <pthread.h>
-
-#include <unordered_map>
-#include <vector>
 #include "vocabulary.hpp"
 #include "wordvec.hpp"
 
