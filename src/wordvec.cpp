@@ -1,7 +1,7 @@
 /*
  * wordvec.cpp
  *
- *  Created on: 2014年7月29日
+ *  Created on: 2014.7.29
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 
@@ -10,7 +10,9 @@
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include <queue>
 #include <cmath>
+#include <algorithm>
 #include <pthread.h>
 
 #include <unordered_map>
@@ -24,23 +26,37 @@ struct Word {
   size_t freq;
   int *point;
   string word;
-  char* code;
-  int codelen;
+  vector<char> code;
 
   Word(string w, size_t f) :
       freq(f), word(w) {
     point = NULL;
-    code = NULL;
-    codelen = 0;
   }
 
   bool operator <(const Word &rhs) const {
-    return this->freq > rhs.freq;
+    return freq > rhs.freq;
+  }
+};
+
+struct HuffmanTreeNode {
+  size_t _freq;
+  int _parent;
+  char _code;
+  size_t _idx;
+
+  HuffmanTreeNode(size_t freq, int parent, int idx) :
+      _freq(freq), _parent(parent), _idx(idx) {
+    _code = 0;
+  }
+
+  bool operator <(const HuffmanTreeNode &rhs) const {
+    return _freq > rhs._freq;
   }
 };
 
 class Vocabulary {
 public:
+
   const size_t MIN_WORD_FREQ;
 
   Vocabulary(size_t min_word_freq = 5) :
@@ -84,6 +100,54 @@ public:
            word2pos.size(), train_words);
   }
 
+  void HuffmanEncoding() {
+    vector<HuffmanTreeNode> nodes;
+    // Heap structure for building huffman tree, min frequency pop out first
+    priority_queue<HuffmanTreeNode> heap;
+    // Firstly, every word in vocabulary is a huffman tree node
+    // Secondly, every tree node should put into a heap
+    for (auto iter = vocab.begin(); iter != vocab.end(); ++iter) {
+      int node_idx = nodes.size();
+      nodes.push_back(HuffmanTreeNode(iter->freq, -1, node_idx));
+      heap.push(nodes.back());
+    }
+    while (!heap.empty()) {
+      // retrieve 2 nodes from heap
+      auto min_node1 = heap.top();
+      heap.pop();
+      if (heap.empty()) { //if heap is empty means huffman tree has built
+        break;
+      }
+      auto min_node2 = heap.top();
+      heap.pop();
+
+      // merge two minimum frequency nodes to a new huffman tree node
+      // currently its parent is -1
+      size_t new_node_idx = nodes.size();
+      auto new_node = HuffmanTreeNode(min_node1._freq + min_node2._freq, -1,
+                                      new_node_idx);
+      nodes.push_back(new_node);
+      heap.push(new_node);
+      // assign huffman code
+      nodes[min_node1._idx]._code = 0;
+      nodes[min_node2._idx]._code = 1;
+      // assign parent index
+      nodes[min_node1._idx]._parent = new_node_idx;
+      nodes[min_node2._idx]._parent = new_node_idx;
+    }
+
+    // Encoding every word in vocabulary
+    for (size_t i = 0; i < vocab.size(); ++i) {
+      int idx = i;
+      // Generate the huffman code from leaf to root
+      // If idx equal to -1 means reach huffman tree root
+      while (idx != -1) {
+        vocab[i].code.push_back(nodes[idx]._code);
+        idx = nodes[idx]._parent;
+      }
+    }
+  }
+
   size_t Size() {
     return vocab.size();
   }
@@ -120,19 +184,17 @@ public:
       }
       word.push_back(ch);
     }
-    // TODO: Truncate Too Long Word?
   }
 
 private:
   unordered_map<string, uint32_t> word2pos;
   vector<Word> vocab;
-
 };
 
 class WordVec {
 public:
 
-  WordVec(int hidden_layer_size = 100, size_t max_sentence_size = 10) :
+  WordVec(size_t hidden_layer_size = 100, size_t max_sentence_size = 10) :
       HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
 
     HIERACHICAL_SOFTMAX = true;
@@ -151,6 +213,7 @@ public:
   void LoadVocabulary(const string &file_name) {
     FILE* fin = fopen(file_name.c_str(), "r");
     voc.LoadVocabFromTrainFile(fin);
+    voc.HuffmanEncoding();
   }
 
   void InitializeNetwork() {
@@ -182,12 +245,14 @@ public:
 
     // Initialize neure
     real* neu1 = new real[HIDDEN_LAYER_SIZE];
+    // Initialize neure error
     real* neu1e = new real[HIDDEN_LAYER_SIZE];
 
     vector<uint32_t> sentence;
     string word;
     while (!feof(fi)) {
       if (sentence.empty()) {
+        // read enough words to consititude a sentence
         while (sentence.size() < MAX_SENTENCE_SIZE && !feof(fi)) {
           Vocabulary::ReadWord(word, fi);
           uint32_t word_idx = voc.GetWordIndex(word);
@@ -201,14 +266,14 @@ public:
       memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
       next_rand = next_rand * (uint64_t) 25214903917 + 11;
       if (CBOW) {
-
+        // in -> hidden
       }
     }
   }
 
-  //configure
+  //configuration for wordvec nueral networks
   const size_t MAX_SENTENCE_SIZE;
-  const int HIDDEN_LAYER_SIZE;
+  const size_t HIDDEN_LAYER_SIZE;
 
   bool HIERACHICAL_SOFTMAX;
   bool NEGATIVE_SAMPLING;
@@ -219,12 +284,14 @@ private:
   Vocabulary voc;
   real* _syn0;  //synapsis for input layer
   real* _syn1;  //synapsis for output layer
-  real _alpha = 0.025;
-  real _start_alpha;
 };
+
+real logit(double x) {
+  return exp(x) / (1 + exp(x));
+}
 
 int main() {
   WordVec wordvec;
-  const string file_name = "/Users/Zeyu/word2vec-master/data/text8";
+  const string file_name = "/Users/Zeyu/WordVec/data/text8";
   wordvec.LoadVocabulary(file_name);
 }
