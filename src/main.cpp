@@ -14,4 +14,6 @@ int main() {
   WordVec wordvec;
   const string file_name = "/Users/Zeyu/WordVec/data/text8";
   wordvec.LoadVocabulary(file_name);
+  uint64_t seed = 10;
+  wordvec.TrainModelWithFile(file_name, seed);
 }

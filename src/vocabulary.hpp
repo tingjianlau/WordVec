@@ -1,7 +1,7 @@
 /*
  * vocabulary.hpp
  *
- *  Created on: 2014年7月31日
+ *  Created on: 2014.7.31
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 #ifndef VOCABULARY_HPP_
@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <assert.h>
 #include <algorithm>
 #include <unordered_map>
 
@@ -17,13 +18,12 @@ using namespace std;
 
 struct Word {
   size_t freq;
-  int *point;
+  vector<size_t> point;
   string word;
   vector<char> code;
 
   Word(string w, size_t f) :
       freq(f), word(w) {
-    point = NULL;
   }
 
   bool operator <(const Word &rhs) const {
@@ -53,6 +53,11 @@ public:
 
   Vocabulary(size_t min_word_freq = 5) :
       MIN_WORD_FREQ(min_word_freq) {
+  }
+
+  Word& operator[](size_t index) {
+    assert(index > 0 && index < vocab.size());
+    return vocab[index];
   }
 
   bool AddWord(const string &word) {
@@ -120,7 +125,7 @@ public:
                                       new_node_idx);
       nodes.push_back(new_node);
       heap.push(new_node);
-      // assign huffman code
+      // assign Huffman code
       nodes[min_node1._idx]._code = 0;
       nodes[min_node2._idx]._code = 1;
       // assign parent index
@@ -131,12 +136,31 @@ public:
     // Encoding every word in vocabulary
     for (size_t i = 0; i < vocab.size(); ++i) {
       int idx = i;
-      // Generate the huffman code from leaf to root
-      // If idx equal to -1 means reach huffman tree root
+      // Generate the Huffman code from leaf to root, it's the same as from root to leaf
+      // If idx equal to -1 means reach Huffman tree root
       while (idx != -1) {
         vocab[i].code.push_back(nodes[idx]._code);
+        // vocab's point is a Huffman code mapping to output layer
+        // Huffman coding mapping just include the frequency information
+        vocab[i].point.push_back(idx);
+
+        if (idx < vocab.size()) {
+          vocab[i].point.push_back(idx);
+        } else {
+          vocab[i].point.push_back(idx - vocab.size());
+        }
         idx = nodes[idx]._parent;
       }
+
+//      printf("word=%s\tfreq=%lu\tcode=", vocab[i].word.c_str(), vocab[i].freq);
+//      for (int j = 0; j < vocab[i].code.size(); ++j) {
+//        printf("%c", vocab[i].code[j] + '0');
+//      }
+//      printf("\n");
+//      for (int j = 0; j < vocab[i].point.size(); ++j) {
+//        printf("%lu ", vocab[i].point[j]);
+//      }
+//      printf("\n");
     }
   }
 
@@ -156,7 +180,7 @@ public:
     }
   }
 
-  uint32_t GetWordIndex(const string &word) {
+  int GetWordIndex(const string &word) {
     if (word2pos.find(word) != word2pos.find(word)) {
       return word2pos[word];
     }
@@ -183,4 +207,3 @@ private:
   vector<Word> vocab;
 };
 #endif /* VOCABULARY_HPP_ */
-
