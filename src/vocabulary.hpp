@@ -36,24 +36,25 @@ class Vocabulary {
 public:
   // Data structure for huffman tree
   struct HuffmanTreeNode {
-    size_t _freq;
-    int _parent;
-    char _code;
-    size_t _idx;
+    size_t freq;
+    int parent;  // if the parent == -1 means root
+    char code;
+    size_t idx;   // node index
 
     HuffmanTreeNode(size_t freq, int parent, int idx) :
-        _freq(freq), _parent(parent), _idx(idx) {
-      _code = 0;
+        freq(freq), parent(parent), idx(idx) {
+      code = 0;
     }
 
     bool operator <(const HuffmanTreeNode &rhs) const {
-      return _freq > rhs._freq;
+      return freq > rhs.freq;
     }
   };
   const size_t MIN_WORD_FREQ;
 
   Vocabulary(size_t min_word_freq = 5) :
       MIN_WORD_FREQ(min_word_freq) {
+    train_word_count = 0;
   }
 
   Word& operator[](size_t index) {
@@ -80,16 +81,16 @@ public:
 
   void LoadVocabFromTrainFile(FILE *fin) {
     clock_t start = clock();
-    size_t train_words = 0;
+    train_word_count = 0;
     string word;
     while (!feof(fin)) {
       ReadWord(word, fin);
       if (word.size() == 0) {
         continue;
       }
-      ++train_words;
-      if (train_words % 100000 == 0) {
-        printf("process %lu K\r", train_words / 1000);
+      ++train_word_count;
+      if (train_word_count % 100000 == 0) {
+        printf("process %lu K\r", train_word_count / 1000);
         fflush(stdout);
       }
       AddWord(word);
@@ -98,7 +99,7 @@ public:
            (clock() * 1.0 - start) / CLOCKS_PER_SEC);
 
     printf("Vocabulary Size = %lu\nWords in Training File = %lu\n",
-           word2pos.size(), train_words);
+           word2pos.size(), train_word_count);
 
   }
 
@@ -125,18 +126,18 @@ public:
       heap.pop();
 
       // merge two minimum frequency nodes to a new huffman tree node
-      // currently its parent is -1
+      // at first its parent is -1
       size_t new_node_idx = nodes.size();
-      auto new_node = HuffmanTreeNode(min_node1._freq + min_node2._freq, -1,
+      auto new_node = HuffmanTreeNode(min_node1.freq + min_node2.freq, -1,
                                       new_node_idx);
       nodes.push_back(new_node);
       heap.push(new_node);
       // assign Huffman code
-      nodes[min_node1._idx]._code = 0;
-      nodes[min_node2._idx]._code = 1;
+      nodes[min_node1.idx].code = 0;
+      nodes[min_node2.idx].code = 1;
       // assign parent index
-      nodes[min_node1._idx]._parent = new_node_idx;
-      nodes[min_node2._idx]._parent = new_node_idx;
+      nodes[min_node1.idx].parent = new_node_idx;
+      nodes[min_node2.idx].parent = new_node_idx;
     }
 
     // Encoding every word in vocabulary
@@ -144,12 +145,12 @@ public:
       size_t idx = i;
       // Generate the Huffman code from leaf to root, it's the same as from root to leaf
       // If idx equal to -1 means reach Huffman tree root
-      while (idx != -1 && nodes[idx]._parent != -1) {
-        vocab[i].code.push_back(nodes[idx]._code);
+      while (nodes[idx].parent != -1) {
+        vocab[i].code.push_back(nodes[idx].code);
         // vocab's point is a Huffman code mapping to output layer
         // Huffman coding mapping just reflects the frequency information
         vocab[i].point.push_back(idx % vocab.size());
-        idx = nodes[idx]._parent;
+        idx = nodes[idx].parent;
       }
 
       /***************This is a extremely hidden TRICK!*******************
@@ -157,18 +158,20 @@ public:
        * every word has a same common output layer node connection!!!
        ******************************************************************/
 
-      vocab[i].point.push_back(vocab.size() - 2);
+      vocab[i].point.push_back(vocab.size() - 2); /************ TRICK HERE *************/
       reverse(vocab[i].code.begin(), vocab[i].code.end());
       reverse(vocab[i].point.begin(), vocab[i].point.end());
-      printf("word=%s freq=%lu code=", vocab[i].word.c_str(), vocab[i].freq);
-      for (int j = 0; j < vocab[i].code.size(); ++j) {
-        printf("%d", (int) (vocab[i].code[j]));
-      }
-      printf("\n");
-      for (int j = 0; j < vocab[i].point.size(); ++j) {
-        printf("%lu ", vocab[i].point[j]);
-      }
-      printf("\n");
+
+      /*******PRINT HUFFMAN ENCODING***************/
+//      printf("word=%s freq=%lu code=", vocab[i].word.c_str(), vocab[i].freq);
+//      for (size_t j = 0; j < vocab[i].code.size(); ++j) {
+//        printf("%d", (int) (vocab[i].code[j]));
+//      }
+//      printf("\n");
+//      for (size_t j = 0; j < vocab[i].point.size(); ++j) {
+//        printf("%lu ", vocab[i].point[j]);
+//      }
+//      printf("\n");
     }
   }
 
@@ -215,8 +218,13 @@ public:
     }
   }
 
+  size_t TrainWordCount() {
+    return train_word_count;
+  }
+
 private:
   unordered_map<string, size_t> word2pos;
   vector<Word> vocab;
+  size_t train_word_count;
 };
 #endif /* VOCABULARY_HPP_ */

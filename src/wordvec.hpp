@@ -17,8 +17,7 @@ typedef float real;
 
 class WordVec {
 public:
-  WordVec(const string &vocab_file_name, size_t hidden_layer_size = 200,
-          size_t max_sentence_size = 1000) :
+  WordVec(size_t hidden_layer_size = 200, size_t max_sentence_size = 1000) :
       HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
 
     HIERACHICAL_SOFTMAX = true;
@@ -27,6 +26,7 @@ public:
     CBOW = true;
     SKIP_GRAM = false;
 
+    _syn0 = _syn1 = NULL;
   }
 
   ~WordVec() {
@@ -49,25 +49,22 @@ public:
     // Initialize synapses for output layer
     if (HIERACHICAL_SOFTMAX) {
       _syn1 = new real[voc.Size() * HIDDEN_LAYER_SIZE];
-      for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; ++hl) {
-        for (size_t il = 0; il < voc.Size(); il++) {
-          // use random value (0,1) to initialize the input synapsis
-          _syn1[il * HIDDEN_LAYER_SIZE + hl] = 0;
-        }
-      }
+      memset(_syn1, 0, voc.Size() * HIDDEN_LAYER_SIZE * sizeof(real));
     }
     //TODO: Negative Sampling Network Initialize
   }
 
-  void Train() {
-    voc.LoadVocabFromTrainFile(vocab_file_name);
+  void Train(const string &train_file_name) {
+    voc.LoadVocabFromTrainFile(train_file_name);
     voc.ReduceVocab();
     voc.HuffmanEncoding();
 
     InitializeNetwork();
+
+    TrainModelWithFile(train_file_name);
   }
 
-  void TrainModelWithFile(const string &file_name, uint64_t &random_seed) {
+  void TrainModelWithFile(const string &file_name) {
     int window = 5;
     real alpha = start_alpha;
     // variable for statistic
@@ -79,16 +76,14 @@ public:
       fprintf(stderr, "No such training file: %s", file_name.c_str());
     }
 
-    // Initialize neure
+    // Initialize neure and neure error
     real* neu1 = new real[HIDDEN_LAYER_SIZE];
-    // Initialize neure error
     real* neu1e = new real[HIDDEN_LAYER_SIZE];
 
     vector<uint32_t> sentence;
     string sen;
     string word;
 
-    int sentence_id = 0;
     while (!feof(fi)) {
       //TODO: adatively tune alpha
       if (word_count - last_word_count > 10000) {
@@ -96,14 +91,14 @@ public:
         last_word_count = word_count;
         now = clock();
         printf(
-            "Alpha: %f  Words/thread/sec: %.2fk\r",
+            "Alpha: %f  Progress: %.2f%%  Words/thread/sec: %.2fk\r",
             alpha,
-            word_count_actual
-                / ((real) (now - start + 1) / (real) CLOCKS_PER_SEC * 1000));
+            word_count_actual * 100.0 / (voc.TrainWordCount() + 1),
+            word_count_actual * 1.0
+                / ((now - start + 1) / CLOCKS_PER_SEC * 1000.0));
         fflush(stdout);
-        alpha = start_alpha * (1 - word_count_actual * 1.0 / 1703717);
-        if (alpha < start_alpha * 0.0001)
-          alpha = start_alpha * 0.0001;
+        alpha = start_alpha
+            * max(0.001, (1 - word_count_actual * 1.0 / voc.TrainWordCount()));
       }
 
       sentence.clear();
@@ -123,44 +118,34 @@ public:
         }
 
       }
-//      printf("sentence: %d\n", ++sentence_id);
-//      for (int i = 0; i < sentence.size(); ++i) {
-//        printf("%d ", sentence[i]);
-//      }
-//      printf("\n");
 
-// TODO: curr_window need to random substract
+      // TODO: curr_window need to random substract
       int window_size = window;
 
       int n = sentence.size();
-      for (int curr = 0; curr < n; ++curr) { //iterate every word of sentence
+      //iterate every word of sentence
+      for (int curr = 0; curr < n; ++curr) {
+        // curr points to the word to be predict
         uint32_t word_predict = sentence[curr];
 
         // determine sentence windows size
         int w_left = max(0, curr - window_size);
         int w_right = min(n - 1, curr + window_size);
-        //printf("predict word = %d [%d, %d]\n", curr, w_left, w_right);
         // clear neu1 and neu1e when predict words change
-        for (size_t i = 0; i < HIDDEN_LAYER_SIZE; ++i) {
-          neu1[i] = neu1e[i] = 0.0;
-        }
-        //memset(neu1, 0, HIDDEN_LAYER_SIZE * sizeof(real));
-        //memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
+        memset(neu1, 0, HIDDEN_LAYER_SIZE * sizeof(real));
+        memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
 
         //printf("word_to_predict = %ld window_left = %d, windows_right = %d\n", word_predict, w_left, w_right);
         // in -> hidden
         for (int w = w_left; w <= w_right; ++w) {
           if (w == curr) {
-            continue; // if w position equal to curr, skip it
+            continue; // if w position equal to the word to predict, skip it
           }
           size_t word_idx = sentence[w];
           for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; hl++) {
             neu1[hl] += _syn0[hl + word_idx * HIDDEN_LAYER_SIZE];
           }
         }
-        //for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; hl++) {
-        //  printf("neu1[%d] = %lf\n", hl, neu1[hl]);
-        //}
         // hierachical softmax
         if (HIERACHICAL_SOFTMAX) {
           //iteratte every huffman code of the word to be predict
@@ -173,18 +158,10 @@ public:
               f += neu1[hl] * _syn1[hl + output_idx];
             }
 
-            //printf("f = %lf\n", f);
-            //if (f <= -MAX_EXP || f >= MAX_EXP) { //skip the f value which is too big or small
-            //  continue;
-            //}
             f = logit(f);
-            //printf("logit(f) = %lf\n", f);
             real g = (1 - voc[word_predict].code[code_idx] - f) * alpha;
-            //printf("g = %lf\n", g);
             for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; ++hl) {
               neu1e[hl] += g * _syn1[hl + output_idx];
-              // printf("delta = %lf neu1[hl] = %lf\n", g * _syn1[hl + out_idx],
-              //        neu1e[hl]);
             }
             for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; ++hl) {
               _syn1[hl + output_idx] += g * neu1[hl];
