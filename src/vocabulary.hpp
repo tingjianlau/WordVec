@@ -7,6 +7,7 @@
 #ifndef VOCABULARY_HPP_
 #define VOCABULARY_HPP_
 
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <queue>
@@ -56,7 +57,7 @@ public:
   }
 
   Word& operator[](size_t index) {
-    assert(index > 0 && index < vocab.size());
+    assert(index >= 0 && index < vocab.size());
     return vocab[index];
   }
 
@@ -69,6 +70,12 @@ public:
     }
 
     return true;
+  }
+
+  void LoadVocabFromTrainFile(const string &file_name) {
+    FILE* fin = fopen(file_name.c_str(), "r");
+    LoadVocabFromTrainFile(fin);
+    fclose(fin);
   }
 
   void LoadVocabFromTrainFile(FILE *fin) {
@@ -90,11 +97,9 @@ public:
     printf("Cost %lf second to load training file\n",
            (clock() * 1.0 - start) / CLOCKS_PER_SEC);
 
-    sort(vocab.begin(), vocab.end());
-    ReduceVocab();
-
     printf("Vocabulary Size = %lu\nWords in Training File = %lu\n",
            word2pos.size(), train_words);
+
   }
 
   void HuffmanEncoding() {
@@ -108,6 +113,7 @@ public:
       nodes.push_back(HuffmanTreeNode(iter->freq, -1, node_idx));
       heap.push(nodes.back());
     }
+
     while (!heap.empty()) {
       // retrieve 2 nodes from heap
       auto min_node1 = heap.top();
@@ -135,32 +141,34 @@ public:
 
     // Encoding every word in vocabulary
     for (size_t i = 0; i < vocab.size(); ++i) {
-      int idx = i;
+      size_t idx = i;
       // Generate the Huffman code from leaf to root, it's the same as from root to leaf
       // If idx equal to -1 means reach Huffman tree root
-      while (idx != -1) {
+      while (idx != -1 && nodes[idx]._parent != -1) {
         vocab[i].code.push_back(nodes[idx]._code);
         // vocab's point is a Huffman code mapping to output layer
-        // Huffman coding mapping just include the frequency information
-        vocab[i].point.push_back(idx);
-
-        if (idx < vocab.size()) {
-          vocab[i].point.push_back(idx);
-        } else {
-          vocab[i].point.push_back(idx - vocab.size());
-        }
+        // Huffman coding mapping just reflects the frequency information
+        vocab[i].point.push_back(idx % vocab.size());
         idx = nodes[idx]._parent;
       }
 
-//      printf("word=%s\tfreq=%lu\tcode=", vocab[i].word.c_str(), vocab[i].freq);
-//      for (int j = 0; j < vocab[i].code.size(); ++j) {
-//        printf("%c", vocab[i].code[j] + '0');
-//      }
-//      printf("\n");
-//      for (int j = 0; j < vocab[i].point.size(); ++j) {
-//        printf("%lu ", vocab[i].point[j]);
-//      }
-//      printf("\n");
+      /***************This is a extremely hidden TRICK!*******************
+       * When we doing huffman encoding mapping, we need to make sure:
+       * every word has a same common output layer node connection!!!
+       ******************************************************************/
+
+      vocab[i].point.push_back(vocab.size() - 2);
+      reverse(vocab[i].code.begin(), vocab[i].code.end());
+      reverse(vocab[i].point.begin(), vocab[i].point.end());
+      printf("word=%s freq=%lu code=", vocab[i].word.c_str(), vocab[i].freq);
+      for (int j = 0; j < vocab[i].code.size(); ++j) {
+        printf("%d", (int) (vocab[i].code[j]));
+      }
+      printf("\n");
+      for (int j = 0; j < vocab[i].point.size(); ++j) {
+        printf("%lu ", vocab[i].point[j]);
+      }
+      printf("\n");
     }
   }
 
@@ -168,20 +176,25 @@ public:
     return vocab.size();
   }
 
+  // Remove low frequency words in vocabulary
+  // Moreover, after sorting the vocabulary, the word->index hash need to be rebuilt
   void ReduceVocab() {
-    int last_idx = vocab.size() - 1;
-    while (last_idx-- >= 0) {
-      if (vocab[last_idx].freq < MIN_WORD_FREQ) {
-        word2pos.erase(vocab[last_idx].word);
-        vocab.pop_back();
-      } else {
-        break;
-      }
+    printf("Reducing Vocabulary...\n");
+    sort(vocab.begin(), vocab.end());
+
+    while (vocab.back().freq < MIN_WORD_FREQ) {
+      vocab.pop_back();
     }
+    word2pos.clear();
+
+    for (size_t i = 0; i < vocab.size(); ++i) {
+      word2pos[vocab[i].word] = i;
+    }
+    printf("Recuded Vocabulary Size = %lu\n", vocab.size());
   }
 
   int GetWordIndex(const string &word) {
-    if (word2pos.find(word) != word2pos.find(word)) {
+    if (word2pos.find(word) != word2pos.end()) {
       return word2pos[word];
     }
     return -1;
@@ -203,7 +216,7 @@ public:
   }
 
 private:
-  unordered_map<string, uint32_t> word2pos;
+  unordered_map<string, size_t> word2pos;
   vector<Word> vocab;
 };
 #endif /* VOCABULARY_HPP_ */

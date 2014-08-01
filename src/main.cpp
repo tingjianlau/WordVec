@@ -11,9 +11,11 @@
 using namespace std;
 
 int main() {
-  WordVec wordvec;
-  const string file_name = "/Users/Zeyu/WordVec/data/text8";
-  wordvec.LoadVocabulary(file_name);
+  const string file_name = "/Users/Zeyu/WordVec/data/text8_aa";
+
+  WordVec wordvec(file_name);
+
   uint64_t seed = 10;
   wordvec.TrainModelWithFile(file_name, seed);
+  wordvec.SaveVector(file_name + "_vector.bin");
 }
