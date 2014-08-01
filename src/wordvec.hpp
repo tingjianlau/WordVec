@@ -158,7 +158,7 @@ public:
               f += neu1[hl] * _syn1[hl + output_idx];
             }
 
-            f = logit(f);
+            f = sigmoid(f);
             real g = (1 - voc[word_predict].code[code_idx] - f) * alpha;
             for (size_t hl = 0; hl < HIDDEN_LAYER_SIZE; ++hl) {
               neu1e[hl] += g * _syn1[hl + output_idx];
@@ -185,8 +185,7 @@ public:
     delete[] neu1e;
   }
 
-  void SaveVector(const string &output_file) {
-    bool binary = true;
+  void SaveVector(const string &output_file, bool binary = true) {
     FILE* fo = fopen(output_file.c_str(), "wb");
     fprintf(fo, "%lld %lld\n", (long long) voc.Size(),
             (long long) HIDDEN_LAYER_SIZE);
@@ -203,8 +202,8 @@ public:
     }
   }
 
-  // logistic function
-  real logit(double x) {
+  // sigmoid function
+  real sigmoid(double x) {
     return exp(x) / (1 + exp(x));
   }
 
@@ -212,7 +211,6 @@ public:
   //configuration for wordvec nueral networks
   const size_t HIDDEN_LAYER_SIZE;
   const size_t MAX_SENTENCE_SIZE;
-  const int MAX_EXP = 6;
 
   bool HIERACHICAL_SOFTMAX;
   bool NEGATIVE_SAMPLING;
