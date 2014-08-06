@@ -73,7 +73,7 @@ public:
     }
     int thread_num = omp_get_thread_num();
     double cost_time = omp_get_wtime() - start;
-    printf("Training Time: %lf seconds\n", cost_time);
+    printf("Training Time: %lf sec\n", cost_time);
     printf("Training Speed: words/thread/sec: %.1fk\n",
            _voc.TrainWordCount() / cost_time / thread_num / 1000);
   }
