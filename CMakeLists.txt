@@ -6,13 +6,20 @@ SET(ROOT_PATH "${SRC_PATH}/../")
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 MESSAGE("Application: WordVec")
 
-SET(CMAKE_CXX_COMPILER "/usr/local/bin/g++")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -g3 -Wall -fopenmp -fPIC -O2 -pg")
 
 MESSAGE(STATUS "CXX FLAGS: ${CMAKE_CXX_FLAGS}")
 
+INCLUDE_DIRECTORIES(
+  ${ROOT_PATH}/include
+  ${SRC_PATH}/include
+)
+
+SET(LIBS libgflags.a)
 SET(EXECUTABLE_OUTPUT_PATH "${ROOT_PATH}/bin")
 SET(LIBRARY_OUTPUT_PATH "${ROOT_PATH}/lib")
 
 ADD_EXECUTABLE(WordVec ${SRC_PATH}/main.cpp)
 ADD_EXECUTABLE(distance "${SRC_PATH}/distance.cpp")
+
+TARGET_LINK_LIBRARIES(WordVec ${LIBS})

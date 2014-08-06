@@ -50,6 +50,7 @@ public:
       return freq > rhs.freq;
     }
   };
+
   const size_t MIN_WORD_FREQ;
 
   Vocabulary(size_t min_word_freq = 5) :
@@ -73,15 +74,25 @@ public:
     return true;
   }
 
-  void LoadVocabFromTrainFile(const string &file_name) {
-    FILE* fin = fopen(file_name.c_str(), "r");
-    LoadVocabFromTrainFile(fin);
-    fclose(fin);
+  void LoadVocabFromTrainFile(const vector<string> &files) {
+    clock_t start = clock();
+    for (size_t i = 0; i < files.size(); ++i) {
+      printf("loading %s\n", files[i].c_str());
+      FILE* fin = fopen(files[i].c_str(), "r");
+      LoadVocabFromTrainFile(fin);
+      fclose(fin);
+    }
+
+    printf("Cost %lf second to load training file\n",
+           (clock() * 1.0 - start) / CLOCKS_PER_SEC);
+
+    printf("Vocabulary Size = %lu\nWords in Training File = %lu\n",
+           word2pos.size(), train_word_count);
+
   }
 
   void LoadVocabFromTrainFile(FILE *fin) {
-    clock_t start = clock();
-    train_word_count = 0;
+
     string word;
     while (!feof(fin)) {
       ReadWord(word, fin);
@@ -89,18 +100,14 @@ public:
         continue;
       }
       ++train_word_count;
+
       if (train_word_count % 100000 == 0) {
         printf("process %lu K\r", train_word_count / 1000);
         fflush(stdout);
       }
+
       AddWord(word);
     }
-    printf("Cost %lf second to load training file\n",
-           (clock() * 1.0 - start) / CLOCKS_PER_SEC);
-
-    printf("Vocabulary Size = %lu\nWords in Training File = %lu\n",
-           word2pos.size(), train_word_count);
-
   }
 
   void HuffmanEncoding() {
@@ -159,6 +166,7 @@ public:
        ******************************************************************/
 
       vocab[i].point.push_back(vocab.size() - 2); /************ TRICK HERE *************/
+
       reverse(vocab[i].code.begin(), vocab[i].code.end());
       reverse(vocab[i].point.begin(), vocab[i].point.end());
 
@@ -179,8 +187,8 @@ public:
     return vocab.size();
   }
 
-  // Remove low frequency words in vocabulary
-  // Moreover, after sorting the vocabulary, the word->index hash need to be rebuilt
+// Remove low frequency words in vocabulary
+// Moreover, after sorting the vocabulary, the word->index hash need to be rebuilt
   void ReduceVocab() {
     printf("Reducing Vocabulary...\n");
     sort(vocab.begin(), vocab.end());

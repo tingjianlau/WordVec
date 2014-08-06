@@ -10,7 +10,7 @@
 
 #include <cstring>
 #include <cstdio>
-
+#include <omp.h>
 #include "vocabulary.hpp"
 
 typedef float real;
@@ -21,8 +21,8 @@ public:
     CBOW, SKIP_GRAM
   };
 
-  WordVec(size_t hidden_layer_size = 200, size_t max_sentence_size = 1000,
-          ModelType model_type = SKIP_GRAM) :
+  WordVec(size_t hidden_layer_size = 100, size_t max_sentence_size = 1000,
+          ModelType model_type = CBOW) :
       HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
 
     HIERACHICAL_SOFTMAX = true;
@@ -30,6 +30,8 @@ public:
 
     _syn0 = _syn1 = NULL;
     _model_type = model_type;
+
+    _word_count_actual = 0;
   }
 
   ~WordVec() {
@@ -57,14 +59,23 @@ public:
     //TODO: Negative Sampling Network Initialize
   }
 
-  void Train(const string &train_file_name) {
-    _voc.LoadVocabFromTrainFile(train_file_name);
+  void Train(const vector<string> &files) {
+    _voc.LoadVocabFromTrainFile(files);
     _voc.ReduceVocab();
     _voc.HuffmanEncoding();
 
     InitializeNetwork();
-
-    TrainModelWithFile(train_file_name);
+    _word_count_actual = 0;
+    double start = omp_get_wtime();
+#pragma omp parallel for
+    for (size_t i = 0; i < files.size(); ++i) {
+      TrainModelWithFile(files[i]);
+    }
+    int thread_num = omp_get_thread_num();
+    double cost_time = omp_get_wtime() - start;
+    printf("Training Time: %lf seconds\n", cost_time);
+    printf("Training Speed: words/thread/sec: %.1fk\n",
+           _voc.TrainWordCount() / cost_time / thread_num / 1000);
   }
 
   // Train Continous Bag-of-Words model
@@ -180,9 +191,7 @@ public:
     int window = 5;
     real alpha = _start_alpha;
     // variable for statistic
-    size_t word_count = 0, last_word_count = 0, word_count_actual = 0;
-    clock_t start = clock(), now;
-
+    size_t word_count = 0, last_word_count = 0;
     FILE *fi = fopen(file_name.c_str(), "r");
     if (fi == NULL) {
       fprintf(stderr, "No such training file: %s", file_name.c_str());
@@ -198,18 +207,17 @@ public:
     while (!feof(fi)) {
       //TODO: tune alpha adaptively and report progress
       if (word_count - last_word_count > 10000) {
-        word_count_actual += word_count - last_word_count;
+#pragma omp critical (word_count)
+        {
+          _word_count_actual += word_count - last_word_count;
+        }
         last_word_count = word_count;
-        now = clock();
-        printf(
-            "Alpha: %f  Progress: %.2f%%  Words/thread/sec: %.2fk\r",
-            alpha,
-            word_count_actual * 100.0 / (_voc.TrainWordCount() + 1),
-            word_count_actual * 1.0
-                / ((now - start + 1) / CLOCKS_PER_SEC * 1000.0));
+        printf("Alpha: %f  Progress: %.2f%%\r", alpha,
+               _word_count_actual * 100.0 / (_voc.TrainWordCount() + 1));
         fflush(stdout);
         alpha = _start_alpha
-            * max(0.001, (1 - word_count_actual * 1.0 / _voc.TrainWordCount()));
+            * max(0.001,
+                  (1 - _word_count_actual * 1.0 / _voc.TrainWordCount()));
       }
 
       sentence.clear();
@@ -255,7 +263,7 @@ public:
     }
   }
 
-  //configuration for word vector nueral networks
+//configuration for word vector nueral networks
   const size_t HIDDEN_LAYER_SIZE;
   const size_t MAX_SENTENCE_SIZE;
 
@@ -263,7 +271,7 @@ public:
   bool NEGATIVE_SAMPLING;
 
 private:
-  // sigmoid function
+// sigmoid function
   real Sigmoid(double x) {
     return exp(x) / (1 + exp(x));
   }
@@ -273,6 +281,7 @@ private:
   Vocabulary _voc;
   real* _syn0;  //synapses for input layer
   real* _syn1;  //synapses for output layer
+  size_t _word_count_actual;
 }
 ;
 
