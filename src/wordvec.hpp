@@ -22,7 +22,7 @@ public:
   };
 
   WordVec(size_t hidden_layer_size = 100, size_t max_sentence_size = 1000,
-          ModelType model_type = CBOW) :
+          ModelType model_type = CBOW, int thread_num = 4) :
       HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
 
     HIERACHICAL_SOFTMAX = true;
@@ -31,7 +31,9 @@ public:
     _syn0 = _syn1 = NULL;
     _model_type = model_type;
 
-    _word_count_actual = 0;
+    _word_count_all_threads = 0;
+
+    _thread_num = thread_num;
   }
 
   ~WordVec() {
@@ -65,17 +67,16 @@ public:
     _voc.HuffmanEncoding();
 
     InitializeNetwork();
-    _word_count_actual = 0;
+    _word_count_all_threads = 0;
     double start = omp_get_wtime();
 #pragma omp parallel for
     for (size_t i = 0; i < files.size(); ++i) {
       TrainModelWithFile(files[i]);
     }
-    int thread_num = omp_get_thread_num();
     double cost_time = omp_get_wtime() - start;
     printf("Training Time: %lf sec\n", cost_time);
     printf("Training Speed: words/thread/sec: %.1fk\n",
-           _voc.TrainWordCount() / cost_time / thread_num / 1000);
+           _voc.TrainWordCount() / cost_time / _thread_num / 1000);
   }
 
   // Train Continous Bag-of-Words model
@@ -191,7 +192,7 @@ public:
     int window = 5;
     real alpha = _start_alpha;
     // variable for statistic
-    size_t word_count = 0, last_word_count = 0;
+    size_t word_count_curr_thread = 0, last_word_count_curr_thread = 0;
     FILE *fi = fopen(file_name.c_str(), "r");
     if (fi == NULL) {
       fprintf(stderr, "No such training file: %s", file_name.c_str());
@@ -206,32 +207,36 @@ public:
 
     while (!feof(fi)) {
       //TODO: tune alpha adaptively and report progress
-      if (word_count - last_word_count > 10000) {
+      if (word_count_curr_thread - last_word_count_curr_thread > 10000) {
 #pragma omp critical (word_count)
         {
-          _word_count_actual += word_count - last_word_count;
+          _word_count_all_threads += word_count_curr_thread
+              - last_word_count_curr_thread;
         }
-        last_word_count = word_count;
+        last_word_count_curr_thread = word_count_curr_thread;
         printf("Alpha: %f  Progress: %.2f%%\r", alpha,
-               _word_count_actual * 100.0 / (_voc.TrainWordCount() + 1));
+               _word_count_all_threads * 100.0 / (_voc.TrainWordCount() + 1));
         fflush(stdout);
         alpha = _start_alpha
             * max(0.001,
-                  (1 - _word_count_actual * 1.0 / _voc.TrainWordCount()));
+                  (1 - _word_count_all_threads * 1.0 / _voc.TrainWordCount()));
       }
 
       sentence.clear();
       if (sentence.empty()) {
         // read enough words to consititude a sentence
         while (sentence.size() < MAX_SENTENCE_SIZE && !feof(fi)) {
-          Vocabulary::ReadWord(word, fi);
+          bool eol = Vocabulary::ReadWord(word, fi);
           int word_idx = _voc.GetWordIndex(word);
           if (word_idx == -1) {
             continue;
           }
-          ++word_count;
+          ++word_count_curr_thread;
           sentence.push_back(word_idx);
           // TODO: do subsampling to discards frequent words
+          if (eol) {
+            break;
+          }
         }
       }
       // finish read sentence
@@ -281,7 +286,8 @@ private:
   Vocabulary _voc;
   real* _syn0;  //synapses for input layer
   real* _syn1;  //synapses for output layer
-  size_t _word_count_actual;
+  size_t _word_count_all_threads;
+  int _thread_num;
 }
 ;
 

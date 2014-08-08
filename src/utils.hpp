@@ -16,6 +16,8 @@
 using namespace std;
 
 bool StartWith(const string &word, const string &prefix) {
+  if (prefix.size() == 0)
+    return true;
   if (word.size() < prefix.size()) {
     return false;
   }
@@ -42,7 +44,6 @@ void GetAllFiles(const string &folder_path, vector<string> &files,
       string file = folder_path + (folder_path.back() == '/' ? "" : "/")
           + filename;
       files.push_back(file);
-      printf("%s\n", file.c_str());
     }
   }
 }
