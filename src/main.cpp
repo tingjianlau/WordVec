@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
   if (FLAGS_skipgram) {
     model_type = WordVec::ModelType::SKIP_GRAM;
   }
-  WordVec wordvec(FLAGS_hidden_size, FLAGS_sentence_size, model_type);
+  WordVec wordvec(FLAGS_hidden_size, FLAGS_sentence_size, model_type, FLAGS_threads);
   wordvec.Train(files);
   wordvec.SaveVector(FLAGS_output);
 }
