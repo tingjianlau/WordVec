@@ -41,8 +41,8 @@ void GetAllFiles(const string &folder_path, vector<string> &files,
       if (!StartWith(filename, prefix)) {
         continue;
       }
-      string file = folder_path + (folder_path.back() == '/' ? "" : "/")
-          + filename;
+      char last_ch = folder_path.back();
+      string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
       files.push_back(file);
     }
   }

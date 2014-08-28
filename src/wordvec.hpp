@@ -30,9 +30,7 @@ public:
 
     _syn0 = _syn1 = NULL;
     _model_type = model_type;
-
     _word_count_all_threads = 0;
-
     _thread_num = thread_num;
   }
 
@@ -62,7 +60,8 @@ public:
   }
 
   void Train(const vector<string> &files) {
-    _voc.LoadVocabFromTrainFile(files);
+    //load vocabulary need to read all files
+    _voc.LoadVocabFromTrainFiles(files);
     _voc.ReduceVocab();
     _voc.HuffmanEncoding();
 
@@ -83,7 +82,7 @@ public:
   void TrainCBOWModel(const vector<uint32_t> &sentence, real neu1[],
                       real neu1e[], int window_size, real alpha) {
     int sentence_len = sentence.size();
-    //iterate every word of sentence
+    //iterate every word in a sentence
     for (int w_target_idx = 0; w_target_idx < sentence_len; ++w_target_idx) {
       // curr points to the word to be predict
       uint32_t target_word = sentence[w_target_idx];
@@ -116,12 +115,13 @@ public:
           }
 
           f = Sigmoid(f);
-          real gradient = (1 - _voc[target_word].code[c_idx] - f) * alpha;
+          //real gradient = (1 - _voc[target_word].code[c_idx] - f) ;
+          real gradient = _voc[target_word].code[c_idx] - f;
           for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h) {
-            neu1e[h] += gradient * _syn1[h + xo];
+            neu1e[h] += alpha * gradient * _syn1[h + xo];
           }
           for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h) {
-            _syn1[h + xo] += gradient * neu1[h];
+            _syn1[h + xo] += alpha * gradient * neu1[h];
           }
         }
       }
@@ -172,16 +172,16 @@ public:
             }
 
             f = Sigmoid(f);
-            real gradient = (1 - _voc[target_word].code[c_idx] - f) * alpha;
+            real gradient = (1 - _voc[target_word].code[c_idx] - f);
             for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h) {
-              neu1e[h] += gradient * _syn1[h + xo];
+              neu1e[h] += alpha * gradient * _syn1[h + xo];
             }
             for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h) {
-              _syn1[h + xo] += gradient * _syn0[h + xi];
+              _syn1[h + xo] += alpha * gradient * _syn0[h + xi];
             }
           }
         }
-        // input -> hidden
+        // hidden -> input
         for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h)
           _syn0[h + xi] += neu1e[h];
       }
@@ -206,7 +206,6 @@ public:
     string word;
 
     while (!feof(fi)) {
-      //TODO: tune alpha adaptively and report progress
       if (word_count_curr_thread - last_word_count_curr_thread > 10000) {
 #pragma omp critical (word_count)
         {
@@ -233,7 +232,7 @@ public:
           }
           ++word_count_curr_thread;
           sentence.push_back(word_idx);
-          // TODO: do subsampling to discards frequent words
+          // TODO: do subsampling to discards high-frequent words
           if (eol) {
             break;
           }

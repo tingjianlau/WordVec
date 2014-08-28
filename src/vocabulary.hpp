@@ -74,7 +74,7 @@ public:
     return true;
   }
 
-  void LoadVocabFromTrainFile(const vector<string> &files) {
+  void LoadVocabFromTrainFiles(const vector<string> &files) {
     clock_t start = clock();
     for (size_t i = 0; i < files.size(); ++i) {
       printf("loading %s\n", files[i].c_str());

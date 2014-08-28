@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   printf("======================================================\n");
 
   printf("output path = %s\n", FLAGS_output.c_str());
-  printf("input path = %s\n", FLAGS_train.c_str());
+  printf("training path = %s\n", FLAGS_train.c_str());
 
   // Read all files in training data folder
   vector<string> files;
