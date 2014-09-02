@@ -21,6 +21,8 @@ public:
     CBOW, SKIP_GRAM
   };
 
+  // NOTE: max_sentence_size determines the cache size
+  // Default model is CBOW for it's faster then Skip-Gram
   WordVec(size_t hidden_layer_size = 100, size_t max_sentence_size = 1000,
           ModelType model_type = CBOW, int thread_num = 4) :
       HIDDEN_LAYER_SIZE(hidden_layer_size), MAX_SENTENCE_SIZE(max_sentence_size) {
@@ -56,11 +58,13 @@ public:
       _syn1 = new real[_voc.Size() * HIDDEN_LAYER_SIZE];
       memset(_syn1, 0, _voc.Size() * HIDDEN_LAYER_SIZE * sizeof(real));
     }
-    //TODO: Negative Sampling Network Initialize
+    // TODO: Negative Sampling Network Initialize
+    // Negative Samlpling is one of the trick of word2vec, but will not change the result greatly
+    // Turn negative sampling off is he default configuration of training word2vec, so here not implemented
   }
 
   void Train(const vector<string> &files) {
-    //load vocabulary need to read all files
+    //loading vocabulary needs to read all files
     _voc.LoadVocabFromTrainFiles(files);
     _voc.ReduceVocab();
     _voc.HuffmanEncoding();
@@ -78,7 +82,7 @@ public:
            _voc.TrainWordCount() / cost_time / _thread_num / 1000);
   }
 
-  // Train Continous Bag-of-Words model
+  // Training Continous Bag-of-Words model with one sentence, alpha is learning rate
   void TrainCBOWModel(const vector<uint32_t> &sentence, real neu1[],
                       real neu1e[], int window_size, real alpha) {
     int sentence_len = sentence.size();
@@ -90,7 +94,7 @@ public:
       // determine sentence windows range w_left and w_right
       int w_left = max(0, w_target_idx - window_size);
       int w_right = min(sentence_len - 1, w_target_idx + window_size);
-      // clear neu1 and neu1e when predict words change
+      // clear neu1 and neu1e when predicted words change
       memset(neu1, 0, HIDDEN_LAYER_SIZE * sizeof(real));
       memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
 
@@ -104,7 +108,7 @@ public:
           neu1[h] += _syn0[h + xi];
         }
       }
-      // hierachical softmax
+      // Hierachical softmax
       if (HIERACHICAL_SOFTMAX) {
         // iterate every Huffman code of the word to be predict
         for (size_t c_idx = 0; c_idx < _voc[target_word].code.size(); ++c_idx) {
@@ -139,7 +143,7 @@ public:
     }
   }
 
-  // Train Skip-Gram Model
+  // Training Skip-Gram with one sentence, alpha is learning rate
   void TrainSkipGramModel(const vector<uint32_t> &sentence, real neu1e[],
                           int window_size, real alpha) {
     int sentence_len = sentence.size();
@@ -233,6 +237,7 @@ public:
           ++word_count_curr_thread;
           sentence.push_back(word_idx);
           // TODO: do subsampling to discards high-frequent words
+          // This is another trick of word2vec, but will not influence the final result
           if (eol) {
             break;
           }
@@ -250,6 +255,7 @@ public:
     delete[] neu1e;
   }
 
+  //save the word vector(the input synapses) to file
   void SaveVector(const string &output_file, bool binary_format = true) {
     FILE* fo = fopen(output_file.c_str(), "wb");
     fprintf(fo, "%lld %lld\n", (long long) _voc.Size(),
@@ -267,7 +273,7 @@ public:
     }
   }
 
-//configuration for word vector nueral networks
+  // configuration for word vector nueral networks
   const size_t HIDDEN_LAYER_SIZE;
   const size_t MAX_SENTENCE_SIZE;
 
@@ -275,7 +281,7 @@ public:
   bool NEGATIVE_SAMPLING;
 
 private:
-// sigmoid function
+  // sigmoid function
   real Sigmoid(double x) {
     return exp(x) / (1 + exp(x));
   }
