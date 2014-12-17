@@ -19,5 +19,14 @@
 *.exe
 *.out
 *.app
+
+# File System
+.DS_Store
+
+# Folder no need to commit
 /Debug/
-/Debug/
+/.settings
+/bin
+/lib
+/build
+

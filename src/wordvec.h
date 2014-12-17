@@ -5,13 +5,14 @@
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 
-#ifndef WORDVEC_HPP_
-#define WORDVEC_HPP_
+#ifndef WORDVEC_H_
+#define WORDVEC_H_
 
 #include <cstring>
 #include <cstdio>
 #include <omp.h>
-#include "vocabulary.hpp"
+
+#include "vocabulary.h"
 
 typedef float real;
 
@@ -143,11 +144,11 @@ public:
     }
   }
 
-  // Training Skip-Gram with one sentence, alpha is learning rate
+  // Training Skip-Gram with one sentence, alpha is thelearning rate
   void TrainSkipGramModel(const vector<uint32_t> &sentence, real neu1e[],
                           int window_size, real alpha) {
     int sentence_len = sentence.size();
-    //iterate every word of sentence
+    //iterate every word in sentence
     for (int w_input_idx = 0; w_input_idx < sentence_len; ++w_input_idx) {
       uint32_t word_input = sentence[w_input_idx];
 
@@ -176,6 +177,7 @@ public:
             }
 
             f = Sigmoid(f);
+            // the gradient formular for word2vec
             real gradient = (1 - _voc[target_word].code[c_idx] - f);
             for (size_t h = 0; h < HIDDEN_LAYER_SIZE; ++h) {
               neu1e[h] += alpha * gradient * _syn1[h + xo];
@@ -202,7 +204,7 @@ public:
       fprintf(stderr, "No such training file: %s", file_name.c_str());
     }
 
-    // Initialize neure and neure error
+    // Initialize neuron and neuron error
     real* neu1 = new real[HIDDEN_LAYER_SIZE];
     real* neu1e = new real[HIDDEN_LAYER_SIZE];
 

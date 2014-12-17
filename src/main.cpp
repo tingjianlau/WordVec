@@ -5,21 +5,22 @@
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 
-#include "vocabulary.hpp"
-#include "wordvec.hpp"
-#include "utils.hpp"
-#include "gflags/gflags.h"
 #include <omp.h>
+
+#include "vocabulary.h"
+#include "wordvec.h"
+#include "utils.h"
+#include "gflags/gflags.h"
 
 using namespace std;
 
 DEFINE_string(train, "", "file path of training data");
 DEFINE_string(prefix, "", "file prefix");
 DEFINE_int32(threads, 4, "multi-thread number");
-DEFINE_string(output, "word_vector.bin", "word vector model");
+DEFINE_string(output, "word_vector.bin", "word vector model output");
 DEFINE_int32(hidden_size, 100, "neural num of hidden layers");
 DEFINE_int32(window, 5, "sliding window size");
-DEFINE_bool(cbow, true, "use Continuous Bag of Words model to train");
+DEFINE_bool(cbow, true, "use Continuous Bag of Words model for training");
 DEFINE_bool(skipgram, false, "use Skip-Gram model to train");
 DEFINE_int32(sentence_size, 1000, "max sentence length");
 
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]) {
   printf("|                      WordVec                       |\n");
   printf("======================================================\n");
 
-  // setting maximum number of processor for openMP
+  // setting maximum number of processor for OpenMP
   printf("======================OpenMP==========================\n");
   int processor_num = omp_get_num_procs();
   printf("--Available Processor Num = %d\n", processor_num);
@@ -47,12 +48,16 @@ int main(int argc, char* argv[]) {
   vector<string> files;
   GetAllFiles(FLAGS_train, files, FLAGS_prefix);
 
-  // Training word vector
+  // Select model type
   WordVec::ModelType model_type = WordVec::ModelType::CBOW;
   if (FLAGS_skipgram) {
     model_type = WordVec::ModelType::SKIP_GRAM;
   }
   WordVec wordvec(FLAGS_hidden_size, FLAGS_sentence_size, model_type, FLAGS_threads);
+
+  // Training word vector
   wordvec.Train(files);
+
+  // Save wrod vector model
   wordvec.SaveVector(FLAGS_output);
 }

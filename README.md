@@ -30,8 +30,8 @@ WordVec是根据Google发布的word2vec个人理解后的一个c++重构版本�
 项目只有4个文件
 
 * 其中distance.cpp与word2vec的distance.c一样
-* wordvec.cpp 是算法核心，根据算法的理解重构了CBOW和Skip-Gram两种模型
-* vocabulary 是对词库的载入，哈夫曼树的建立，低频次过滤等操作的封装
+* wordvec.hpp 是算法核心，根据算法的理解重构了CBOW和Skip-Gram两种模型
+* vocabulary.hpp 是对词库的载入，哈夫曼树的建立，低频次过滤等操作的封装
 * utils.cpp 封装的是一些读取文件，遍历文件的操作
 
 

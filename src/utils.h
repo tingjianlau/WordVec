@@ -1,12 +1,12 @@
 /*
- * vocabulary.hpp
+ * utils.h 
  *
  *  Created on: 2014.7.31
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
 
-#ifndef UTILS_HPP_
-#define UTILS_HPP_
+#ifndef UTILS_H_
+#define UTILS_H_
 
 #include <stdio.h>
 #include <dirent.h>
@@ -16,8 +16,9 @@
 using namespace std;
 
 bool StartWith(const string &word, const string &prefix) {
-  if (prefix.size() == 0)
+  if (prefix.size() == 0) {
     return true;
+  }
   if (word.size() < prefix.size()) {
     return false;
   }

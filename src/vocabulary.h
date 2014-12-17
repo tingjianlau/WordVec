@@ -4,8 +4,9 @@
  *  Created on: 2014.7.31
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
  */
-#ifndef VOCABULARY_HPP_
-#define VOCABULARY_HPP_
+
+#ifndef VOCABULARY_H_
+#define VOCABULARY_H_
 
 #include <cstdio>
 #include <string>
@@ -101,14 +102,16 @@ public:
       ++train_word_count;
 
       if (train_word_count % 100000 == 0) {
-        printf("process %lu K\r", train_word_count / 1000);
+        printf("process %lu K words\r", train_word_count / 1000);
         fflush(stdout);
       }
 
       AddWord(word);
     }
   }
-
+  
+  // This is a clear implementation of buiding Huffman Tree than google 
+  // word2vec 
   void HuffmanEncoding() {
     vector<HuffmanTreeNode> nodes;
     // Heap structure for building huffman tree, min frequency pop out first
@@ -149,8 +152,8 @@ public:
     // Encoding every word in vocabulary
     for (size_t i = 0; i < vocab.size(); ++i) {
       size_t idx = i;
-      // Generate the Huffman code from leaf to root, it's the same as from root to leaf
-      // If idx equal to -1 means reach Huffman tree root
+      // Generate the Huffman code from leaf to root, it's the same as from 
+      // root to leaf. If idx equal to -1 means reach Huffman tree root
       while (nodes[idx].parent != -1) {
         vocab[i].code.push_back(nodes[idx].code);
         // vocab's point is a Huffman code mapping to output layer
@@ -186,8 +189,8 @@ public:
     return vocab.size();
   }
 
-// Remove low frequency words in vocabulary
-// Moreover, after sorting the vocabulary, the word->index hash need to be rebuilt
+  // Remove low frequency words in vocabulary
+  // Moreover, after sorting the vocabulary, the word->index hash need to be rebuilt
   void ReduceVocab() {
     printf("Reducing Vocabulary...\n");
     sort(vocab.begin(), vocab.end());
