@@ -25,8 +25,14 @@
 
 # Folder no need to commit
 /Debug/
-/.settings
+/.settings/
 /bin
 /lib
 /build
+/data
 
+# Clion files
+/.settings/
+/.idea/
+.project
+.cproject
