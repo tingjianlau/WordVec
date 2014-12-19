@@ -114,4 +114,14 @@ inline int RandInt(int bound) {
     return static_cast<int>(RandReal() * bound);
 }
 
-#endif
+// check whether a string is start with given prefix
+bool StartWith(const std::string &word, const std::string &prefix);
+
+
+// a simple file operator to get all the files under given folder
+void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files,
+    const std::string &prefix) ;
+
+real Sigmoid(double x);
+
+#endif  // utils.h

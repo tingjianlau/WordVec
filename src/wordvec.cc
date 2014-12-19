@@ -2,13 +2,14 @@
 
 using namespace std;
 
+WordVec::WordVec() {
+  syn_in_ = syn_out_ = NULL;
+  word_count_total_ = 0;
+}
 
 WordVec::WordVec(Options options) : opt_(options) {
   syn_in_ = syn_out_ = NULL;
   word_count_total_ = 0;
-
-  HIERACHICAL_SOFTMAX = opt_.use_hierachical_softmax;
-  NEGATIVE_SAMPLING = opt_.use_negative_sampling;
 }
 
 WordVec::~WordVec() {
@@ -20,15 +21,15 @@ void WordVec::InitializeNetwork() {
   // Initialize synapses for input layer
   syn_in_ = new real[voc_.Size() * opt_.hidden_layer_size];
 
-  for (size_t h = 0; h < opt_.hidden_layer_size; ++h) {
-    for (size_t xi = 0; xi < voc_.Size(); xi++) {
+  for (int h = 0; h < opt_.hidden_layer_size; ++h) {
+    for (int xi = 0; xi < voc_.Size(); xi++) {
       // use random value (0,1) to initialize the input synapses
       syn_in_[xi * opt_.hidden_layer_size + h] = RandReal();
     }
   }
 
   // Initialize synapses for output layer
-  if (HIERACHICAL_SOFTMAX) {
+  if (opt_.use_hierachical_softmax) {
     syn_out_ = new real[voc_.Size() * opt_.hidden_layer_size];
     memset(syn_out_, 0, voc_.Size() * opt_.hidden_layer_size * sizeof(real));
   }
@@ -48,7 +49,7 @@ void WordVec::Train(const vector<string> &files) {
   word_count_total_ = 0;
   double start = omp_get_wtime();
 #pragma omp parallel for
-  for (size_t i = 0; i < files.size(); ++i) {
+  for (int i = 0; i < files.size(); ++i) {
     TrainModelWithFile(files[i]);
   }
   double cost_time = omp_get_wtime() - start;
@@ -84,7 +85,7 @@ void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
       }
     }
     // Hierachical softmax
-    if (HIERACHICAL_SOFTMAX) {
+    if (opt_.use_hierachical_softmax) {
       // iterate every Huffman code of the word to be predict
       for (int c_idx = 0; c_idx < voc_[target_word].code.size(); ++c_idx) {
         real f = 0;
@@ -140,7 +141,7 @@ void WordVec::TrainSkipGramModel(const vector<int> &sentence, real neu1e[],
       int target_word = sentence[w];
 
       // hierachical softmax
-      if (HIERACHICAL_SOFTMAX) {
+      if (opt_.use_hierachical_softmax) {
         // iterate every Huffman code of the word to be predict
         for (int c_idx = 0; c_idx < voc_[target_word].code.size();
              ++c_idx) {

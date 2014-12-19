@@ -24,4 +24,4 @@ struct Options {
   Options();
 };
 
-#endif
+#endif // options.h

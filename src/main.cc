@@ -9,7 +9,7 @@
 
 #include "vocabulary.h"
 #include "wordvec.h"
-#include "options.h"
+#include "utils.h"
 #include "gflags/gflags.h"
 
 using namespace std;
@@ -25,44 +25,9 @@ DEFINE_bool(skipgram, false, "use Skip-Gram model to train");
 DEFINE_int32(sentence_size, 1000, "max sentence length");
 DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
 
-// check whether a string is start with given prefix
-bool StartWith(const std::string &word, const std::string &prefix) {
-  if (prefix.size() == 0) {
-    return true;
-  }
-  if (word.size() < prefix.size()) {
-    return false;
-  }
-  for (int i = 0; i < prefix.size(); ++i) {
-    if (word[i] != prefix[i])
-      return false;
-  }
-
-  return true;
-}
-
-// a simple file operator to get all the files under given folder
-void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files,
-                 const std::string &prefix) {
-  files.clear();
-  struct dirent* ent = NULL;
-  DIR *pDir;
-  pDir = opendir(folder_path.c_str());
-  while ((ent = readdir(pDir)) != NULL) {
-    if (ent->d_type == DT_REG) {
-      std::string filename(ent->d_name);
-      if (!StartWith(filename, prefix)) {
-        continue;
-      }
-      char last_ch = folder_path.back();
-      std::string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
-      files.push_back(file);
-    }
-  }
-}
-
 
 bool ConstructOptions(Options &options) {
+  CHECK_EQ(FLAGS_cbow, FLAGS_skipgram);
   options.model_type = ModelType::kCBOW;
   if (FLAGS_skipgram) {
     options.model_type = ModelType::kSKIP_GRAM;
@@ -74,10 +39,12 @@ bool ConstructOptions(Options &options) {
   options.use_hierachical_softmax = true;
   options.use_negative_sampling = false;
 
-  LOG(INFO) << "options.hidden_layer_size =" << options.hidden_layer_size << endl;
-  LOG(INFO) << "options.max_sentence_size =" << options.max_sentence_size << endl;
-  LOG(INFO) << "options.thread_num =" << options.thread_num << endl;
-  LOG(INFO) << "options.windows_size =" << options.windows_size << endl;
+  LOG(INFO) << "hidden_layer_size = " << options.hidden_layer_size << endl;
+  LOG(INFO) << "max_sentence_size = " << options.max_sentence_size << endl;
+  LOG(INFO) << "thread_num = " << options.thread_num << endl;
+  LOG(INFO) << "windows_size = " << options.windows_size << endl;
+  LOG(INFO) << "use_hierachical_softmax = " << options.use_hierachical_softmax << endl;
+  LOG(INFO) << "use_negative_sampling = " << options.use_negative_sampling << endl;
 
   return true;
 }

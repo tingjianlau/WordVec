@@ -41,8 +41,8 @@ struct Word {
 struct HuffmanTreeNode {
   int freq;    // the frequency sum of each node
   int parent;  // if the parent == NOPARENT(-1) means root
-  char code;  // huffman code for each node
-  int idx;   // node index
+  char code;   // huffman code for each node
+  int idx;     // node index
 
   HuffmanTreeNode(int freq, int parent, int idx) :
           freq(freq), parent(parent), idx(idx) {
@@ -92,6 +92,6 @@ private:
   std::vector<Word> vocab_;
   int train_word_count_;
 
-  const int NO_PARENT = -1;
+  const int kNO_PARENT = -1;
 };
 #endif /* VOCABULARY_H_ */

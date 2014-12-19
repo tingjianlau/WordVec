@@ -20,6 +20,7 @@ using namespace std;
 
 class WordVec {
  public:
+  WordVec();
 
   WordVec(Options option);
 
@@ -28,7 +29,6 @@ class WordVec {
   void InitializeNetwork();
 
   void Train(const std::vector<std::string> &files);
-
 
   // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
   void TrainCBOWModel(const vector<int> &sentence, real neu1[],
@@ -43,27 +43,19 @@ class WordVec {
   //save the word vector(the input synapses) to file
   void SaveVector(const string &output_file, bool binary_format);
 
- private:
   // sigmoid function
-  real Sigmoid(double x) {
-    return exp(x) / (1 + exp(x));
-  }
 
-  // configuration for word vector nueral networks
-  int HIDDEN_LAYER_SIZE;
-  int MAX_SENTENCE_SIZE;
 
-  bool HIERACHICAL_SOFTMAX;
-  bool NEGATIVE_SAMPLING;
-
-  ModelType model_type_;
+ private:
   const real start_alpha_ = 0.025;
+
   Vocabulary voc_;
+
   real* syn_in_;  //synapses for input layer
+
   real* syn_out_;  //synapses for output layer
 
   size_t word_count_total_;
-  int thread_num_;
 
   Options opt_;
 };
