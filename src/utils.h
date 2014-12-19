@@ -66,7 +66,7 @@ extern char kSegmentFaultCauser[];
   }                                                     \
                                                       \
 
-// GLOG mini version to avoid too much library dependency
+// mini version of glog, to avoid too much library dependency
 enum LogSeverity { INFO, WARNING, ERROR, FATAL }; // Log Level
 
 class Logger {
@@ -92,7 +92,26 @@ class Logger {
 
 #define LOG(ls) Logger(ls, __FILE__, __LINE__).stream()
 
+// define POD type of this project
+// if we want to use double to imporve precsion, just change here
+typedef float               real;
+typedef int                 int32;
+typedef uint32_t            uint32;
+typedef int64_t             int64;
+typedef uint64_t            uint64;
 
-typedef float real;
+// Generate a random float value in the range of [0,1) from the
+// uniform distribution.
+inline real RandReal() {
+    return rand() / static_cast<real>(RAND_MAX);
+}
+
+// Generate a random integer value in the range of [0,bound) from the
+// uniform distribution.
+inline int RandInt(int bound) {
+    // NOTE: Do NOT use rand() % bound, which does not approximate a
+    // discrete uniform distribution will.
+    return static_cast<int>(RandReal() * bound);
+}
 
 #endif

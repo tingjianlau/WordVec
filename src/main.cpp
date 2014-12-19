@@ -9,7 +9,6 @@
 
 #include "vocabulary.h"
 #include "wordvec.h"
-#include "utils.h"
 #include "gflags/gflags.h"
 
 using namespace std;
@@ -23,6 +22,7 @@ DEFINE_int32(window, 5, "sliding window size");
 DEFINE_bool(cbow, true, "use Continuous Bag of Words model for training");
 DEFINE_bool(skipgram, false, "use Skip-Gram model to train");
 DEFINE_int32(sentence_size, 1000, "max sentence length");
+DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
 
 // check whether a string is start with given prefix
 bool StartWith(const std::string &word, const std::string &prefix) {

@@ -4,7 +4,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(SRC_PATH "${PROJECT_SOURCE_DIR}/src")
 SET(ROOT_PATH "${SRC_PATH}/../")
 
-#aux_source_directory(./src SOURCE_FILES)
 set(SOURCE_FILES 
   ${SRC_PATH}/utils.cc
   ${SRC_PATH}/vocabulary.cc
@@ -14,7 +13,7 @@ set(SOURCE_FILES
 
 MESSAGE("Application: WordVec")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -g3 -Wall -fopenmp -fPIC -O2 -pg")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -g3 -fopenmp -O2 -pg")
 
 
 if(APPLE)
