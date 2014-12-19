@@ -24,6 +24,42 @@ DEFINE_bool(cbow, true, "use Continuous Bag of Words model for training");
 DEFINE_bool(skipgram, false, "use Skip-Gram model to train");
 DEFINE_int32(sentence_size, 1000, "max sentence length");
 
+// check whether a string is start with given prefix
+bool StartWith(const std::string &word, const std::string &prefix) {
+  if (prefix.size() == 0) {
+    return true;
+  }
+  if (word.size() < prefix.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < prefix.size(); ++i) {
+    if (word[i] != prefix[i])
+      return false;
+  }
+
+  return true;
+}
+
+// a simple file operator to get all the files under given folder
+void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files,
+                 const std::string &prefix) {
+  files.clear();
+  struct dirent* ent = NULL;
+  DIR *pDir;
+  pDir = opendir(folder_path.c_str());
+  while ((ent = readdir(pDir)) != NULL) {
+    if (ent->d_type == DT_REG) {
+      std::string filename(ent->d_name);
+      if (!StartWith(filename, prefix)) {
+        continue;
+      }
+      char last_ch = folder_path.back();
+      std::string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
+      files.push_back(file);
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
 
   // use google-flags to parse command line
@@ -58,6 +94,6 @@ int main(int argc, char* argv[]) {
   // Training word vector
   wordvec.Train(files);
 
-  // Save wrod vector model
+  // Save word vector model
   wordvec.SaveVector(FLAGS_output);
 }

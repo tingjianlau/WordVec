@@ -13,8 +13,7 @@
 #include <omp.h>
 
 #include "vocabulary.h"
-
-typedef float real;
+#include "utils.h"
 
 class WordVec {
 public:
@@ -60,8 +59,9 @@ public:
       memset(_syn1, 0, _voc.Size() * HIDDEN_LAYER_SIZE * sizeof(real));
     }
     // TODO: Negative Sampling Network Initialize
-    // Negative Samlpling is one of the trick of word2vec, but will not change the result greatly
-    // Turn negative sampling off is he default configuration of training word2vec, so here not implemented
+    // Negative Samlpling is one of the trick of word2vec, but will not improve
+    // the result greatly. Turning negative sampling off is he default 
+    // configuration of training word2vec, so here not implemented
   }
 
   void Train(const vector<string> &files) {
@@ -99,7 +99,7 @@ public:
       memset(neu1, 0, HIDDEN_LAYER_SIZE * sizeof(real));
       memset(neu1e, 0, HIDDEN_LAYER_SIZE * sizeof(real));
 
-      // in -> hidden
+      // update from input layer -> hidden layer
       for (int w = w_left; w <= w_right; ++w) {
         if (w == w_target_idx) {
           continue; // if w position equal to the target word index, skip it
@@ -131,7 +131,7 @@ public:
         }
       }
       // TODO: Negative Sampling
-      // hidden -> in
+      // update from hidden layer -> input layer
       for (int w = w_left; w <= w_right; ++w) {
         if (w == w_target_idx) {
           continue; // if w position equal to curr, skip it
@@ -144,7 +144,7 @@ public:
     }
   }
 
-  // Training Skip-Gram with one sentence, alpha is thelearning rate
+  // Training Skip-Gram model with one sentence, alpha is the learning rate
   void TrainSkipGramModel(const vector<uint32_t> &sentence, real neu1e[],
                           int window_size, real alpha) {
     int sentence_len = sentence.size();

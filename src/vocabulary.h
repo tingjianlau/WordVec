@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "utils.h"
+
 using namespace std;
 
 struct Word {
@@ -60,6 +62,8 @@ public:
   }
 
   Word& operator[](size_t index) {
+    CHECK_GE(index, 0)
+    CHECK_LT(index, vocab.size())
     assert(index >= 0 && index < vocab.size());
     return vocab[index];
   }
@@ -110,7 +114,7 @@ public:
     }
   }
   
-  // This is a clear implementation of buiding Huffman Tree than google 
+  // This is a clearer implementation of buiding Huffman Tree than google 
   // word2vec 
   void HuffmanEncoding() {
     vector<HuffmanTreeNode> nodes;
@@ -162,7 +166,7 @@ public:
         idx = nodes[idx].parent;
       }
 
-      /***************This is a extremely hidden TRICK!*******************
+      /***************Below is a hidden TRICK!***************************
        * When we doing huffman encoding mapping, we need to make sure:
        * every word has a same common output layer node connection!!!
        ******************************************************************/

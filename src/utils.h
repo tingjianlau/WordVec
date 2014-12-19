@@ -8,45 +8,91 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <iostream>
+#include <vector>
 #include <stdio.h>
+#include <string>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <string>
 
-using namespace std;
+// CHECK operator utilities
+extern char kSegmentFaultCauser[];
 
-bool StartWith(const string &word, const string &prefix) {
-  if (prefix.size() == 0) {
-    return true;
+#define CHECK(a) if (!(a)) {                                            \
+    std::cerr << "CHECK failed "                                        \
+              << __FILE__ << ":" << __LINE__ << "\n"                    \
+              << #a << " = " << (a) << "\n";                            \
+    *kSegmentFaultCauser = '\0';                                        \
+  }                                                                     \
+
+#define CHECK_EQ(a, b) if (!((a) == (b))) {                             \
+    std::cerr << "CHECK_EQ failed "                                     \
+              << __FILE__ << ":" << __LINE__ << "\n"                    \
+              << #a << " = " << (a) << "\n"                             \
+              << #b << " = " << (b) << "\n";                            \
+    *kSegmentFaultCauser = '\0';                                        \
+  }                                                                     \
+
+#define CHECK_GT(a, b) if (!((a) > (b))) {                              \
+    std::cerr << "CHECK_GT failed "                                     \
+              << __FILE__ << ":" << __LINE__ << "\n"                    \
+              << #a << " = " << (a) << "\n"                             \
+              << #b << " = " << (b) << "\n";                            \
+    *kSegmentFaultCauser = '\0';                                        \
+  }                                                                     \
+
+#define CHECK_LT(a, b) if (!((a) < (b))) {                              \
+    std::cerr << "CHECK_LT failed "                                     \
+              << __FILE__ << ":" << __LINE__ << "\n"                    \
+              << #a << " = " << (a) << "\n"                             \
+              << #b << " = " << (b) << "\n";                            \
+    *kSegmentFaultCauser = '\0';                                        \
+  }                                                                     \
+
+#define CHECK_GE(a, b) if (!((a) >= (b))) {                             \
+    std::cerr << "CHECK_GE failed "                                     \
+              << __FILE__ << ":" << __LINE__ << "\n"                    \
+              << #a << " = " << (a) << "\n"                             \
+              << #b << " = " << (b) << "\n";                            \
+    *kSegmentFaultCauser = '\0';                                        \
+  }                                                                     \
+
+#define CHECK_LE(a, b) if (!((a) <= (b))) {             \
+    std::cerr << "CHECK_LE failed "                     \
+              << __FILE__ << ":" << __LINE__ << "\n"    \
+              << #a << " = " << (a) << "\n"             \
+              << #b << " = " << (b) << "\n";            \
+    *kSegmentFaultCauser = '\0';                        \
+  }                                                     \
+                                                      \
+
+// GLOG mini version to avoid too much library dependency
+enum LogSeverity { INFO, WARNING, ERROR, FATAL }; // Log Level
+
+class Logger {
+ public:
+  Logger(LogSeverity ls, const std::string& file, int line)
+      : ls_(ls), file_(file), line_(line) {}
+
+  std::ostream& stream() const {
+    return std::cerr << file_ << " (" << line_ << ") : ";
   }
-  if (word.size() < prefix.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < prefix.size(); ++i) {
-    if (word[i] != prefix[i])
-      return false;
-  }
 
-  return true;
-}
-
-void GetAllFiles(const string &folder_path, vector<string> &files,
-                 const string &prefix) {
-  files.clear();
-  struct dirent* ent = NULL;
-  DIR *pDir;
-  pDir = opendir(folder_path.c_str());
-  while ((ent = readdir(pDir)) != NULL) {
-    if (ent->d_type == DT_REG) {
-      string filename(ent->d_name);
-      if (!StartWith(filename, prefix)) {
-        continue;
-      }
-      char last_ch = folder_path.back();
-      string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
-      files.push_back(file);
+  ~Logger() {
+    if (ls_ == FATAL) {
+      //*::kSegmentFaultCauser = '\0';
     }
   }
-}
+
+ private:
+  LogSeverity ls_;
+  std::string file_;
+  int line_;
+};
+
+#define LOG(ls) Logger(ls, __FILE__, __LINE__).stream()
+
+
+typedef float real;
 
 #endif
