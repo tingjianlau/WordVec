@@ -80,18 +80,17 @@ public:
 
   int GetWordIndex(const std::string &word);
 
-  // Read word by word from text, return true if read end of file(EOF) or '\n'
-  static bool ReadWord(std::string &word, FILE* fin);
-
-  int TrainWordCount() {
+  int GetTrainWordCount() {
     return train_word_count_;
   }
 
 private:
   std::unordered_map<std::string, int> word2pos_;
+
   std::vector<Word> vocab_;
+
   int train_word_count_;
 
-  const int kNO_PARENT = -1;
+  const int kNoParent = -1;
 };
 #endif /* VOCABULARY_H_ */

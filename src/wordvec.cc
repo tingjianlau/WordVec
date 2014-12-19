@@ -55,7 +55,7 @@ void WordVec::Train(const vector<string> &files) {
   double cost_time = omp_get_wtime() - start;
   printf("Training Time: %lf sec\n", cost_time);
   printf("Training Speed: words/thread/sec: %.1fk\n",
-      voc_.TrainWordCount() / cost_time / opt_.thread_num / 1000);
+      voc_.GetTrainWordCount() / cost_time / opt_.thread_num / 1000);
 }
 
 // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
@@ -195,20 +195,20 @@ void WordVec::TrainModelWithFile(const string &file_name) {
       }
       last_word_count_curr_thread = word_count_curr_thread;
       printf("Alpha: %f  Progress: %.2f%%\r", alpha,
-          word_count_total_ * 100.0 / (voc_.TrainWordCount() + 1));
+          word_count_total_ * 100.0 / (voc_.GetTrainWordCount() + 1));
       fflush(stdout);
 
       // decay alpha according to training progress
       alpha = start_alpha_
           * max(0.001,
-          (1 - word_count_total_ * 1.0 / voc_.TrainWordCount()));
+          (1 - word_count_total_ * 1.0 / voc_.GetTrainWordCount()));
     }
 
     sentence.clear();
     if (sentence.empty()) {
       // read enough words to consititude a sentence
       while (sentence.size() < opt_.max_sentence_size && !feof(fi)) {
-        bool eol = Vocabulary::ReadWord(word, fi);
+        bool eol = ReadWord(word, fi);
         int word_idx = voc_.GetWordIndex(word);
         if (word_idx == -1) {
           continue;
@@ -225,7 +225,7 @@ void WordVec::TrainModelWithFile(const string &file_name) {
     // finish read sentence
     if (opt_.model_type == kCBOW) {
       TrainCBOWModel(sentence, neu1, neu1e, window, alpha);
-    } else if (opt_.model_type == kSKIP_GRAM) {
+    } else if (opt_.model_type == kSkipGram) {
       TrainSkipGramModel(sentence, neu1, window, alpha);
     }
   }

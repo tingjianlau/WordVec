@@ -30,7 +30,7 @@ bool ConstructOptions(Options &options) {
   CHECK_EQ(FLAGS_cbow, FLAGS_skipgram);
   options.model_type = ModelType::kCBOW;
   if (FLAGS_skipgram) {
-    options.model_type = ModelType::kSKIP_GRAM;
+    options.model_type = ModelType::kSkipGram;
   }
   options.hidden_layer_size = FLAGS_hidden_size;
   options.max_sentence_size = FLAGS_sentence_size;

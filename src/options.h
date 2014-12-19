@@ -3,7 +3,7 @@
 
 enum ModelType {
   kCBOW = 0x01,
-  kSKIP_GRAM = 0x02
+  kSkipGram = 0x02
 };
 
 struct Options {

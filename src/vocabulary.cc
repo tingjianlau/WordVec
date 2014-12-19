@@ -69,7 +69,7 @@ void Vocabulary::HuffmanEncoding() {
     // Secondly, every tree node should put into a heap
     for (auto iter = vocab_.begin(); iter != vocab_.end(); ++iter) {
         int node_idx = nodes.size();
-        nodes.emplace_back(HuffmanTreeNode(iter->freq, kNO_PARENT, node_idx));
+        nodes.emplace_back(HuffmanTreeNode(iter->freq, kNoParent, node_idx));
         heap.push(nodes.back());
     }
 
@@ -86,7 +86,7 @@ void Vocabulary::HuffmanEncoding() {
         // merge two minimum frequency nodes to a new huffman tree node
         // at first its parent is -1
         int new_node_idx = nodes.size();
-        auto new_node = HuffmanTreeNode(min_node1.freq + min_node2.freq, kNO_PARENT,
+        auto new_node = HuffmanTreeNode(min_node1.freq + min_node2.freq, kNoParent,
                 new_node_idx);
         nodes.push_back(new_node);
 
@@ -105,7 +105,7 @@ void Vocabulary::HuffmanEncoding() {
         int idx = i;
         // Generate the Huffman code from leaf to root, it's the same as from
         // root to leaf. If idx equal to -1 means reach Huffman tree root
-        while (nodes[idx].parent != kNO_PARENT) {
+        while (nodes[idx].parent != kNoParent) {
             vocab_[i].code.push_back(nodes[idx].code);
             // vocab's point is a Huffman code mapping to output layer
             // Huffman coding mapping just reflects the frequency information
@@ -131,7 +131,6 @@ void Vocabulary::ReduceVocab() {
     sort(vocab_.begin(), vocab_.end());
 
     while (vocab_.back().freq < FLAGS_min_word_freq) {
-        train_word_count_ -= vocab_.back().freq;
         vocab_.pop_back();
     }
     word2pos_.clear();
@@ -150,22 +149,3 @@ int Vocabulary::GetWordIndex(const string &word) {
     return -1;
 }
 
-// Read word by word from text, return true if read end of file(EOF) or '\n'
-bool Vocabulary::ReadWord(string &word, FILE* fin) {
-    word.clear();
-    char ch;
-    while (!feof(fin)) {
-        ch = fgetc(fin);
-        if (ch == 13 || ch == 9) {
-            continue; //skip '\r' and
-        }
-        if (ch == ' ' || ch == '\t') {
-            return false;
-        }
-        if (ch == '\n') {
-            return true;  // if read a '\n' that
-        }
-        word.push_back(ch);
-    }
-    return true;
-}

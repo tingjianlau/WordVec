@@ -124,4 +124,7 @@ void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files
 
 real Sigmoid(double x);
 
+// Read word by word from text, return true if read end of file(EOF) or '\n'
+bool ReadWord(std::string &word, FILE* fin);
+
 #endif  // utils.h
