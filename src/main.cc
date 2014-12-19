@@ -9,6 +9,7 @@
 
 #include "vocabulary.h"
 #include "wordvec.h"
+#include "options.h"
 #include "gflags/gflags.h"
 
 using namespace std;
@@ -32,7 +33,7 @@ bool StartWith(const std::string &word, const std::string &prefix) {
   if (word.size() < prefix.size()) {
     return false;
   }
-  for (size_t i = 0; i < prefix.size(); ++i) {
+  for (int i = 0; i < prefix.size(); ++i) {
     if (word[i] != prefix[i])
       return false;
   }
@@ -60,6 +61,27 @@ void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files
   }
 }
 
+
+bool ConstructOptions(Options &options) {
+  options.model_type = ModelType::kCBOW;
+  if (FLAGS_skipgram) {
+    options.model_type = ModelType::kSKIP_GRAM;
+  }
+  options.hidden_layer_size = FLAGS_hidden_size;
+  options.max_sentence_size = FLAGS_sentence_size;
+  options.thread_num = FLAGS_threads;
+  options.windows_size = FLAGS_window;
+  options.use_hierachical_softmax = true;
+  options.use_negative_sampling = false;
+
+  LOG(INFO) << "options.hidden_layer_size =" << options.hidden_layer_size << endl;
+  LOG(INFO) << "options.max_sentence_size =" << options.max_sentence_size << endl;
+  LOG(INFO) << "options.thread_num =" << options.thread_num << endl;
+  LOG(INFO) << "options.windows_size =" << options.windows_size << endl;
+
+  return true;
+}
+
 int main(int argc, char* argv[]) {
 
   // use google-flags to parse command line
@@ -84,16 +106,15 @@ int main(int argc, char* argv[]) {
   vector<string> files;
   GetAllFiles(FLAGS_train, files, FLAGS_prefix);
 
-  // Select model type
-  WordVec::ModelType model_type = WordVec::ModelType::CBOW;
-  if (FLAGS_skipgram) {
-    model_type = WordVec::ModelType::SKIP_GRAM;
-  }
-  WordVec wordvec(FLAGS_hidden_size, FLAGS_sentence_size, model_type, FLAGS_threads);
+  // Fill in wordvec options
+  Options options;
+  ConstructOptions(options);
+
+  WordVec wordvec(options);
 
   // Training word vector
   wordvec.Train(files);
 
   // Save word vector model
-  wordvec.SaveVector(FLAGS_output);
+  wordvec.SaveVector(FLAGS_output, true);
 }

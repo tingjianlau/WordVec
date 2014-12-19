@@ -7,6 +7,7 @@ SET(ROOT_PATH "${SRC_PATH}/../")
 set(SOURCE_FILES 
   ${SRC_PATH}/utils.cc
   ${SRC_PATH}/vocabulary.cc
+  ${SRC_PATH}/options.cc
   ${SRC_PATH}/wordvec.cc
 ) 
   
@@ -41,7 +42,7 @@ SET(LIBRARY_OUTPUT_PATH "${ROOT_PATH}/lib")
 
 add_library(wv STATIC ${SOURCE_FILES})
 
-ADD_EXECUTABLE(wordvec ${SRC_PATH}/main.cpp)
+ADD_EXECUTABLE(wordvec ${SRC_PATH}/main.cc)
 target_link_libraries(wordvec wv ${LIBS}) 
 
-ADD_EXECUTABLE(distance "${SRC_PATH}/distance.cpp")
+ADD_EXECUTABLE(distance "${SRC_PATH}/distance.cc")

@@ -1,5 +1,5 @@
 /*
- * vocabulary.hpp
+ * vocabulary.h
  *
  *  Created on: 2014.7.31
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
@@ -19,37 +19,38 @@
 #include "utils.h"
 #include "gflags/gflags.h"
 
+DECLARE_int32(min_word_freq);
 
 struct Word {
-  int freq_;
-  std::vector<int> output_node_id_;
-  std::string word_;
-  std::vector<char> code_;
+  int freq;
+  std::vector<int> output_node_id;
+  std::string word;
+  std::vector<char> code;
 
   Word(std::string word, size_t freq) :
-      freq_(freq), word_(word) {
+      freq(freq), word(word) {
   }
 
   // high frequency word frist
   bool operator <(const Word &rhs) const {
-    return freq_ > rhs.freq_;
+    return freq > rhs.freq;
   }
 };
 
 // Data structure for huffman tree
 struct HuffmanTreeNode {
-  int freq_;    // the frequency sum of each node
-  int parent_;  // if the parent == NOPARENT(-1) means root
-  char code_;  // huffman code for each node
-  int idx_;   // node index
+  int freq;    // the frequency sum of each node
+  int parent;  // if the parent == NOPARENT(-1) means root
+  char code;  // huffman code for each node
+  int idx;   // node index
 
   HuffmanTreeNode(int freq, int parent, int idx) :
-          freq_(freq), parent_(parent), idx_(idx) {
-    code_ = 0;
+          freq(freq), parent(parent), idx(idx) {
+    code = 0;
   }
 
   bool operator <(const HuffmanTreeNode &rhs) const {
-    return freq_ > rhs.freq_;
+    return freq > rhs.freq;
   }
 };
 
@@ -77,7 +78,7 @@ public:
   // Moreover, after sorting the vocabulary, the word->index hash need to be rebuild
   void ReduceVocab();
 
-  size_t GetWordIndex(const std::string &word);
+  int GetWordIndex(const std::string &word);
 
   // Read word by word from text, return true if read end of file(EOF) or '\n'
   static bool ReadWord(std::string &word, FILE* fin);
@@ -93,4 +94,4 @@ private:
 
   const int NO_PARENT = -1;
 };
-#endif /* VOCABULARY_HPP_ */
+#endif /* VOCABULARY_H_ */
