@@ -127,4 +127,19 @@ real Sigmoid(double x);
 // Read word by word from text, return true if read end of file(EOF) or '\n'
 bool ReadWord(std::string &word, FILE* fin);
 
+class FileCloser {
+ public:
+  FileCloser(FILE* f) : f_(f) {
+  }
+  ~FileCloser() {
+    delete f_;
+  }
+
+ private:
+  FILE* f_;
+
+  FileCloser(const FileCloser&);  // no copying!
+  void operator=(const FileCloser&);
+}
+
 #endif  // utils.h
