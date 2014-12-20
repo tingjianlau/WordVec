@@ -116,9 +116,9 @@ void Vocabulary::ReduceVocab() {
   LOG(INFO) << "Recuded Vocabulary Size = " << vocab_.size() << endl;
 }
 
-int Vocabulary::GetWordIndex(const string &word) {
+int Vocabulary::GetWordIndex(const string &word) const {
   if (word2pos_.find(word) != word2pos_.end()) {
-    return word2pos_[word];
+    return word2pos_.at(word);
   }
 
   return -1;

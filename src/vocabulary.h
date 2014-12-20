@@ -73,7 +73,7 @@ class Vocabulary {
   // Moreover, after sorting the vocabulary, the word->index hash need to be rebuild
   void ReduceVocab();
 
-  int GetWordIndex(const std::string &word);
+  int GetWordIndex(const std::string &word) const;
 
   int GetTrainWordCount() const {
     return train_word_count_;
