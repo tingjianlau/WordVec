@@ -19,9 +19,6 @@
 #include "gflags/gflags.h"
 #include "utils.h"
 
-// TODO: Define this flag in cpp file, no need to define in main.
-DECLARE_int32(min_word_freq);
-
 struct Word {
   int freq;
   std::vector<int> output_node_id;
@@ -42,8 +39,8 @@ struct Word {
 struct HuffmanTreeNode {
   int freq;    // the frequency sum of each node
   int parent;  // if the parent == NOPARENT(-1) means root
-  char code;   // huffman code for each node
   int idx;     // node index
+  char code;   // huffman code for each node
 
   HuffmanTreeNode(int freq, int parent, int idx) :
     freq(freq), parent(parent), idx(idx), code(0) {
@@ -57,6 +54,8 @@ struct HuffmanTreeNode {
 class Vocabulary {
 public:
   Vocabulary();
+
+  virtual ~Vocabulary();
 
   Word& operator[](size_t index);
 
@@ -76,7 +75,7 @@ public:
   // Moreover, after sorting the vocabulary, the word->index hash need to be rebuild
   void ReduceVocab();
 
-  int GetWordIndex(const std::string &word) const;
+  int GetWordIndex(const std::string &word);
 
   int GetTrainWordCount() const {
     return train_word_count_;
@@ -88,6 +87,6 @@ private:
   std::vector<Word> vocab_;
 
   int train_word_count_;
-
 };
-#endif /* VOCABULARY_H_ */
+
+#endif // vocabulary.h

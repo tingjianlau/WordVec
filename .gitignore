@@ -30,6 +30,7 @@
 /lib
 /build
 /data
+tags
 
 # Clion files
 /.settings/

@@ -9,18 +9,8 @@
 using namespace std;
 
 
-TEST(TestUtil, TestStrStartWith) {
-  ASSERT_EQ(true, StartWith("chenzeyu", ""));
-  ASSERT_EQ(true, StartWith("chenzeyu", "chen"));
-  ASSERT_EQ(false, StartWith("chenzeyu", "xx"));
-}
-
-TEST(TestUtil, TestSigmoid) {
-  ASSERT_EQ(0.5, Sigmoid(0.0));
-}
-
 class TestWordVec : public ::testing::Test {
-protected:
+ protected:
   TestWordVec() {
 
   }

@@ -8,15 +8,13 @@
 #ifndef WORDVEC_H_
 #define WORDVEC_H_
 
-#include <cstring>
 #include <cstdio>
+#include <cstring>
 #include <omp.h>
 
-#include "vocabulary.h"
 #include "options.h"
 #include "utils.h"
-
-using namespace std;
+#include "vocabulary.h"
 
 class WordVec {
  public:
@@ -24,30 +22,28 @@ class WordVec {
 
   WordVec(const Options &option);
 
-  ~WordVec();
+  virtual ~WordVec();
 
   void InitializeNetwork();
 
   void Train(const std::vector<std::string> &files);
 
   // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
-  void TrainCBOWModel(const vector<int> &sentence, real neu1[],
+  void TrainCBOWModel(const std::vector<int> &sentence, real neu1[],
                       real neu1e[], int window_size, real alpha);
 
   // Training Skip-Gram model with one sentence, alpha is the learning rate
-  void TrainSkipGramModel(const vector<int> &sentence, real neu1e[],
+  void TrainSkipGramModel(const std::vector<int> &sentence, real neu1e[],
                           int window_size, real alpha);
 
-  void TrainModelWithFile(const string &file_name);
+  void TrainModelWithFile(const std::string &file_name);
 
   //save the word vector(the input synapses) to file
-  void SaveVector(const string &output_file, bool binary_format);
+  void SaveVector(const std::string &output_file, bool binary_format);
 
   // sigmoid function
 
-
  private:
-
   Vocabulary voc_;
 
   real* syn_in_;  //synapses for input layer

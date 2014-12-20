@@ -8,12 +8,12 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include <iostream>
-#include <vector>
-#include <stdio.h>
-#include <string>
 #include <dirent.h>
+#include <iostream>
+#include <cstdio>
+#include <string>
 #include <sys/stat.h>
+#include <vector>
 
 // CHECK operator utilities
 extern char kSegmentFaultCauser[];
@@ -80,7 +80,7 @@ class Logger {
 
   virtual ~Logger() {
     if (ls_ == FATAL) {
-      //*::kSegmentFaultCauser = '\0';
+      *::kSegmentFaultCauser = '\0';
     }
   }
 
@@ -114,17 +114,6 @@ inline int RandInt(int bound) {
     return static_cast<int>(RandReal() * bound);
 }
 
-// check whether a string is start with given prefix
-bool StartWith(const std::string &word, const std::string &prefix);
-
-
-// a simple file operator to get all the files under given folder
-void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files,
-    const std::string &prefix) ;
-
-real Sigmoid(double x);
-
-// Read word by word from text, return true if read end of file(EOF) or '\n'
 bool ReadWord(std::string &word, FILE* fin);
 
 class FileCloser {
@@ -133,15 +122,14 @@ class FileCloser {
   }
 
   virtual ~FileCloser() {
-    f_.close();
+    fclose(f_); 
   }
 
  private:
   FILE* f_;
 
   FileCloser(const FileCloser&);  // no copying!
-
-  void operator=(const FileCloser&);
-}
+  void operator=(const FileCloser&);  // no copying!
+};
 
 #endif  // utils.h

@@ -1,18 +1,24 @@
 #include "wordvec.h"
 
+#include <cmath>
+
 using namespace std;
 
 namespace {
-  const real start_alpha_ = 0.025;
+const real start_alpha_ = 0.025;
+  
+inline real Sigmoid(double x) {
+  return exp(x) / (1 + exp(x));
+}
 }
 
 WordVec::WordVec() {
-  syn_in_ = syn_out_ = NULL;
+  syn_in_ = syn_out_ = nullptr;
   word_count_total_ = 0;
 }
 
 WordVec::WordVec(const Options &options) : opt_(options) {
-  syn_in_ = syn_out_ = NULL;
+  syn_in_ = syn_out_ = nullptr;
   word_count_total_ = 0;
 }
 
@@ -39,8 +45,7 @@ void WordVec::InitializeNetwork() {
   }
 // TODO: Negative Sampling Network Initialize
 // Negative Samlpling is one of the trick of word2vec, but will not improve
-// the result greatly. Turning negative sampling off is he default
-// config
+// the result greatly. Turning negative sampling off is he default config
 }
 
 void WordVec::Train(const vector<string> &files) {
@@ -182,6 +187,7 @@ void WordVec::TrainModelWithFile(const string &file_name) {
   // variable for statistic
   int word_count_curr_thread = 0, last_word_count_curr_thread = 0;
   FILE *fi = fopen(file_name.c_str(), "r");
+  FileCloser fcloser(fi);
   if (fi == NULL) {
     LOG(FATAL) << "No such training file: " << file_name << endl;
   }
@@ -246,6 +252,7 @@ void WordVec::TrainModelWithFile(const string &file_name) {
 //save the word vector(the input synapses) to file
 void WordVec::SaveVector(const string &output_file, bool binary_format = true) {
   FILE* fo = fopen(output_file.c_str(), "wb");
+  FileCloser fcloser(fo);
   fprintf(fo, "%lld %lld\n", (long long) voc_.Size(),
       (long long) opt_.hidden_layer_size);
   for (int i = 0; i < voc_.Size(); ++i) {
