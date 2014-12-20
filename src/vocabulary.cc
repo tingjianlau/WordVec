@@ -1,10 +1,8 @@
 #include "vocabulary.h"
 
-
 using namespace std;
 
-Vocabulary::Vocabulary() {
-    train_word_count_ = 0;
+Vocabulary::Vocabulary() : train_word_count_(0) {
 }
 
 Word& Vocabulary::operator[](size_t index) {

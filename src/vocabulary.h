@@ -8,17 +8,18 @@
 #ifndef VOCABULARY_H_
 #define VOCABULARY_H_
 
-#include <cstdio>
-#include <string>
-#include <vector>
-#include <queue>
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
+#include <cstdio>
+#include <queue>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
-#include "utils.h"
 #include "gflags/gflags.h"
+#include "utils.h"
 
+// TODO: Define this flag in cpp file, no need to define in main.
 DECLARE_int32(min_word_freq);
 
 struct Word {
@@ -27,7 +28,7 @@ struct Word {
   std::string word;
   std::vector<char> code;
 
-  Word(std::string word, size_t freq) :
+  Word(const std::string &word, size_t freq) :
       freq(freq), word(word) {
   }
 
@@ -45,8 +46,7 @@ struct HuffmanTreeNode {
   int idx;     // node index
 
   HuffmanTreeNode(int freq, int parent, int idx) :
-          freq(freq), parent(parent), idx(idx) {
-    code = 0;
+    freq(freq), parent(parent), idx(idx), code(0) {
   }
 
   bool operator <(const HuffmanTreeNode &rhs) const {
@@ -54,6 +54,7 @@ struct HuffmanTreeNode {
   }
 };
 
+// TODO: Define this flag in cpp file, no need to define in main.
 DECLARE_int32(min_word_freq);
 
 class Vocabulary {
@@ -70,7 +71,7 @@ public:
 
   void HuffmanEncoding();
 
-  size_t Size() {
+  size_t Size() const {
     return vocab_.size();
   }
 
@@ -78,9 +79,9 @@ public:
   // Moreover, after sorting the vocabulary, the word->index hash need to be rebuild
   void ReduceVocab();
 
-  int GetWordIndex(const std::string &word);
+  int GetWordIndex(const std::string &word) const;
 
-  int GetTrainWordCount() {
+  int GetTrainWordCount() const {
     return train_word_count_;
   }
 

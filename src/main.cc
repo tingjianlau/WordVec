@@ -7,10 +7,10 @@
 
 #include <omp.h>
 
+#include "gflags/gflags.h"
+#include "utils.h"
 #include "vocabulary.h"
 #include "wordvec.h"
-#include "utils.h"
-#include "gflags/gflags.h"
 
 using namespace std;
 
@@ -26,7 +26,9 @@ DEFINE_int32(sentence_size, 1000, "max sentence length");
 DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
 DEFINE_int32(iter, 1, "iteration for training the corpus");
 
-bool ConstructOptions(Options &options) {
+namespace {
+
+bool PopulateOptions(Options &options) {
   CHECK_EQ(FLAGS_cbow, FLAGS_skipgram);
   options.model_type = ModelType::kCBOW;
   if (FLAGS_skipgram) {
@@ -40,16 +42,18 @@ bool ConstructOptions(Options &options) {
   options.use_negative_sampling = false;
   options.iter = FLAGS_iter;
 
-  LOG(INFO) << "iter = " << options.iter << endl;
-  LOG(INFO) << "hidden_layer_size = " << options.hidden_layer_size << endl;
-  LOG(INFO) << "max_sentence_size = " << options.max_sentence_size << endl;
-  LOG(INFO) << "thread_num = " << options.thread_num << endl;
-  LOG(INFO) << "windows_size = " << options.windows_size << endl;
-  LOG(INFO) << "use_hierachical_softmax = " << options.use_hierachical_softmax << endl;
-  LOG(INFO) << "use_negative_sampling = " << options.use_negative_sampling << endl;
+  LOG(INFO) << "iter = " << options.iter;
+  LOG(INFO) << "hidden_layer_size = " << options.hidden_layer_size;
+  LOG(INFO) << "max_sentence_size = " << options.max_sentence_size;
+  LOG(INFO) << "thread_num = " << options.thread_num;
+  LOG(INFO) << "windows_size = " << options.windows_size;
+  LOG(INFO) << "use_hierachical_softmax = " << options.use_hierachical_softmax;
+  LOG(INFO) << "use_negative_sampling = " << options.use_negative_sampling;
 
   return true;
 }
+
+} // namespace
 
 int main(int argc, char* argv[]) {
 
@@ -62,7 +66,7 @@ int main(int argc, char* argv[]) {
 
   // setting maximum number of processor for OpenMP
   printf("======================OpenMP==========================\n");
-  int processor_num = omp_get_num_procs();
+  const int processor_num = omp_get_num_procs();
   printf("--Available Processor Num = %d\n", processor_num);
   printf("--Set Thread Num = %d\n", FLAGS_threads);
   omp_set_num_threads(FLAGS_threads);
@@ -77,7 +81,7 @@ int main(int argc, char* argv[]) {
 
   // Fill in wordvec options
   Options options;
-  ConstructOptions(options);
+  PopulateOptions(options);
 
   WordVec wordvec(options);
 
