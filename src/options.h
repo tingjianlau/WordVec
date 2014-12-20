@@ -1,3 +1,12 @@
+/*
+ * options.h
+ *
+ * configuration for WordVec
+ *
+ *  Created on: 2014.7.31
+ *      Author: Zeyu Chen(zeyuchen@outlook.com)
+ */
+
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
