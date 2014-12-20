@@ -9,8 +9,6 @@
 #define WORDVEC_H_
 
 #include <cstdio>
-#include <cstring>
-#include <omp.h>
 
 #include "options.h"
 #include "utils.h"

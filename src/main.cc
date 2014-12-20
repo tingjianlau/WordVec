@@ -62,6 +62,7 @@ void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files
   }
 }
 
+// create options from flags
 bool PopulateOptions(Options &options) {
   options.model_type = ModelType::kCBOW;
   if (FLAGS_skipgram) {

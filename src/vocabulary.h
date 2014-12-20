@@ -9,15 +9,10 @@
 #define VOCABULARY_H_
 
 #include <algorithm>
-#include <assert.h>
-#include <cstdio>
-#include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "gflags/gflags.h"
-#include "utils.h"
 
 struct Word {
   int freq;

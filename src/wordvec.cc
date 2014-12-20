@@ -1,7 +1,9 @@
 #include "wordvec.h"
 
 #include <cmath>
+#include <cstring>
 #include <memory>
+#include <omp.h>
 
 using namespace std;
 

@@ -8,7 +8,6 @@
 
 using namespace std;
 
-
 class TestWordVec : public ::testing::Test {
  protected:
   TestWordVec() {

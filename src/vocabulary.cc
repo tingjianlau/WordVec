@@ -1,5 +1,16 @@
-#include <stddef.h>
+/*
+ * vocabulary.cc
+ *
+ *  Created on: 2014.7.31
+ *      Author: Zeyu Chen(zeyuchen@outlook.com)
+ */
+
 #include "vocabulary.h"
+
+#include <queue>
+
+#include "gflags/gflags.h"
+#include "utils.h"
 
 using namespace std;
 
