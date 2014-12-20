@@ -1,5 +1,5 @@
 /*
- * main.cpp
+ * main.cc
  *
  *  Created on: 2014.7.29
  *      Author: Zeyu Chen(zeyuchen@outlook.com)
@@ -27,7 +27,6 @@ DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
 DEFINE_int32(iter, 1, "iteration for training the corpus");
 
 bool ConstructOptions(Options &options) {
-  CHECK_EQ(FLAGS_cbow, FLAGS_skipgram);
   options.model_type = ModelType::kCBOW;
   if (FLAGS_skipgram) {
     options.model_type = ModelType::kSkipGram;
