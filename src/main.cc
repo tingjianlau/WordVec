@@ -26,7 +26,6 @@ DEFINE_int32(sentence_size, 1000, "max sentence length");
 DEFINE_int32(iter, 1, "iteration for training the corpus");
 
 namespace {
-
 // Check whether a string is start with specific prefix
 bool StrStartWith(const std::string &word, const std::string &prefix) {
   if (prefix.empty()) {
@@ -122,7 +121,8 @@ int main(int argc, char* argv[]) {
 
   WordVec wordvec(options);
 
-  // Training word vector
+  // Training word vector by loading multiple files
+  // NOTE: parallel by files with OpenMP, one thread for one training file
   wordvec.Train(files);
 
   // Save word vector model

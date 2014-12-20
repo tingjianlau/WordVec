@@ -52,7 +52,7 @@ struct HuffmanTreeNode {
 };
 
 class Vocabulary {
-public:
+ public:
   Vocabulary();
 
   virtual ~Vocabulary();
@@ -61,9 +61,7 @@ public:
 
   bool AddWord(const std::string &word);
 
-  void LoadVocabFromTrainFiles(const std::vector<std::string> &files);
-
-  void LoadVocabFromTrainFile(FILE *fin);
+  static Vocabulary* CreateVocabFromTrainFiles(const std::vector<std::string> &files);
 
   void HuffmanEncoding();
 
@@ -81,7 +79,7 @@ public:
     return train_word_count_;
   }
 
-private:
+ private:
   std::unordered_map<std::string, int> word2pos_;
 
   std::vector<Word> vocab_;

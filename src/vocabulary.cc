@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "vocabulary.h"
 
 using namespace std;
@@ -6,6 +7,7 @@ DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
 
 namespace {
 const int kNoParent = -1;
+
 } // namespace
 
 Vocabulary::Vocabulary() : train_word_count_(0) {
@@ -27,42 +29,9 @@ bool Vocabulary::AddWord(const string &word) {
   } else {
     vocab_[word2pos_[word]].freq++;
   }
+  ++train_word_count_;
 
   return true;
-}
-
-void Vocabulary::LoadVocabFromTrainFiles(const vector<string> &files) {
-  clock_t start = clock();
-  for (int i = 0; i < files.size(); ++i) {
-    printf("loading %s\n", files[i].c_str());
-    FILE *fin = fopen(files[i].c_str(), "r");
-    FileCloser fcloser(fin);
-    LoadVocabFromTrainFile(fin);
-  }
-
-  printf("Cost %lf second to load training file\n",
-      (clock() * 1.0 - start) / CLOCKS_PER_SEC);
-
-  printf("Vocabulary Size = %lu\nWords in Training File = %d\n",
-      word2pos_.size(), train_word_count_);
-}
-
-void Vocabulary::LoadVocabFromTrainFile(FILE *fin) {
-  string word;
-  while (!feof(fin)) {
-    ReadWord(word, fin);
-    if (word.size() == 0) {
-      continue;
-    }
-    ++train_word_count_;
-
-    if (train_word_count_ % 100000 == 0) {
-      printf("process %d K words\r", train_word_count_ / 1000);
-      fflush(stdout);
-    }
-
-    AddWord(word);
-  }
 }
 
 // This is a clearer implementation of building Huffman Tree than google
@@ -144,7 +113,7 @@ void Vocabulary::ReduceVocab() {
   for (int i = 0; i < vocab_.size(); ++i) {
     word2pos_[vocab_[i].word] = i;
   }
-  printf("Recuded Vocabulary Size = %lu\n", vocab_.size());
+  LOG(INFO) << "Recuded Vocabulary Size = " << vocab_.size() << endl;
 }
 
 int Vocabulary::GetWordIndex(const string &word) {
@@ -155,3 +124,32 @@ int Vocabulary::GetWordIndex(const string &word) {
   return -1;
 }
 
+Vocabulary *Vocabulary::CreateVocabFromTrainFiles(const std::vector<std::string> &files) {
+  Vocabulary* vocab = new Vocabulary();
+  clock_t start = clock();
+  for (const auto &f : files) {
+    LOG(INFO) << "loading " << f.c_str() << endl;
+    FILE *fin = fopen(f.c_str(), "r");
+    FileCloser fcloser(fin);
+    string word;
+    while (!feof(fin)) {
+      ReadWord(word, fin);
+      if (word.empty()) {
+        continue;
+      }
+      vocab->AddWord(word);
+      if (vocab->GetTrainWordCount() % 100000 == 0) {
+        printf("process %d K words\r", vocab->GetTrainWordCount() / 1000);
+        fflush(stdout);
+      }
+    }
+  }
+
+  printf("Cost %lf second to load training file\n",
+      (clock() * 1.0 - start) / CLOCKS_PER_SEC);
+
+  printf("Vocabulary Size = %lu\nWords in Training File = %d\n",
+      vocab->Size(), vocab->GetTrainWordCount());
+
+  return vocab;
+}

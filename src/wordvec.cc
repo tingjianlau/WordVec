@@ -1,6 +1,7 @@
 #include "wordvec.h"
 
 #include <cmath>
+#include <memory>
 
 using namespace std;
 
@@ -50,7 +51,8 @@ void WordVec::InitializeNetwork() {
 
 void WordVec::Train(const vector<string> &files) {
   //loading vocabulary needs to read all files
-  voc_.LoadVocabFromTrainFiles(files);
+  unique_ptr<Vocabulary> p_vocab(Vocabulary::CreateVocabFromTrainFiles(files));
+  voc_ = *p_vocab.get();
   voc_.ReduceVocab();
   voc_.HuffmanEncoding();
 
