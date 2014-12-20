@@ -15,6 +15,8 @@ struct Options {
 
   int windows_size;
 
+  int iter;
+
   ModelType model_type;
 
   bool use_hierachical_softmax;

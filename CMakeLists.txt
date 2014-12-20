@@ -13,7 +13,7 @@ set(SOURCE_FILES
 
 MESSAGE("Application: WordVec")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -g3 -fopenmp -O2 -pg")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -g3 -fopenmp -O3 -pg")
 
 
 if(APPLE)

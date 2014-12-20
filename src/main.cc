@@ -24,7 +24,7 @@ DEFINE_bool(cbow, true, "use Continuous Bag of Words model for training");
 DEFINE_bool(skipgram, false, "use Skip-Gram model to train");
 DEFINE_int32(sentence_size, 1000, "max sentence length");
 DEFINE_int32(min_word_freq, 5, "the minimum word frequecy in vocabulary");
-
+DEFINE_int32(iter, 1, "iteration for training the corpus");
 
 bool ConstructOptions(Options &options) {
   CHECK_EQ(FLAGS_cbow, FLAGS_skipgram);
@@ -38,7 +38,9 @@ bool ConstructOptions(Options &options) {
   options.windows_size = FLAGS_window;
   options.use_hierachical_softmax = true;
   options.use_negative_sampling = false;
+  options.iter = FLAGS_iter;
 
+  LOG(INFO) << "iter = " << options.iter << endl;
   LOG(INFO) << "hidden_layer_size = " << options.hidden_layer_size << endl;
   LOG(INFO) << "max_sentence_size = " << options.max_sentence_size << endl;
   LOG(INFO) << "thread_num = " << options.thread_num << endl;

@@ -48,9 +48,12 @@ void WordVec::Train(const vector<string> &files) {
   InitializeNetwork();
   word_count_total_ = 0;
   double start = omp_get_wtime();
+  // iterate the corpus
+  for (int epoch = 0; epoch < opt_.iter; ++epoch) {
 #pragma omp parallel for
-  for (int i = 0; i < files.size(); ++i) {
-    TrainModelWithFile(files[i]);
+    for (int i = 0; i < files.size(); ++i) {
+      TrainModelWithFile(files[i]);
+    }
   }
   double cost_time = omp_get_wtime() - start;
   printf("Training Time: %lf sec\n", cost_time);
@@ -186,6 +189,8 @@ void WordVec::TrainModelWithFile(const string &file_name) {
   vector<int> sentence;
   string word;
 
+  int train_word_total = voc_.GetTrainWordCount() * opt_.iter;
+
   while (!feof(fi)) {
     if (word_count_curr_thread - last_word_count_curr_thread > 10000) {
 #pragma omp critical (word_count)
@@ -195,13 +200,13 @@ void WordVec::TrainModelWithFile(const string &file_name) {
       }
       last_word_count_curr_thread = word_count_curr_thread;
       printf("Alpha: %f  Progress: %.2f%%\r", alpha,
-          word_count_total_ * 100.0 / (voc_.GetTrainWordCount() + 1));
+          word_count_total_ * 100.0 / (train_word_total + 1));
       fflush(stdout);
 
       // decay alpha according to training progress
       alpha = start_alpha_
           * max(0.001,
-          (1 - word_count_total_ * 1.0 / voc_.GetTrainWordCount()));
+          (1 - word_count_total_ * 1.0 / train_word_total));
     }
 
     sentence.clear();
