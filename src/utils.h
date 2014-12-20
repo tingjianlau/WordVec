@@ -75,10 +75,10 @@ class Logger {
       : ls_(ls), file_(file), line_(line) {}
 
   std::ostream& stream() const {
-    return std::cerr << file_ << " (" << line_ << ") : ";
+    return std::cerr << file_ << " (" << line_ << ") : " ;
   }
 
-  ~Logger() {
+  virtual ~Logger() {
     if (ls_ == FATAL) {
       //*::kSegmentFaultCauser = '\0';
     }
@@ -131,14 +131,16 @@ class FileCloser {
  public:
   FileCloser(FILE* f) : f_(f) {
   }
-  ~FileCloser() {
-    delete f_;
+
+  virtual ~FileCloser() {
+    f_.close();
   }
 
  private:
   FILE* f_;
 
   FileCloser(const FileCloser&);  // no copying!
+
   void operator=(const FileCloser&);
 }
 

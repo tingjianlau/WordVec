@@ -54,9 +54,6 @@ struct HuffmanTreeNode {
   }
 };
 
-// TODO: Define this flag in cpp file, no need to define in main.
-DECLARE_int32(min_word_freq);
-
 class Vocabulary {
 public:
   Vocabulary();
@@ -92,6 +89,5 @@ private:
 
   int train_word_count_;
 
-  const int kNoParent = -1;
 };
 #endif /* VOCABULARY_H_ */

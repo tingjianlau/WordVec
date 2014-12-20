@@ -22,7 +22,7 @@ class WordVec {
  public:
   WordVec();
 
-  WordVec(Options option);
+  WordVec(const Options &option);
 
   ~WordVec();
 
@@ -47,7 +47,6 @@ class WordVec {
 
 
  private:
-  const real start_alpha_ = 0.025;
 
   Vocabulary voc_;
 

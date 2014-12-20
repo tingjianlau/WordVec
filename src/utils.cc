@@ -7,7 +7,7 @@ using namespace std;
 char kSegmentFaultCauser[] = "Used to cause artificial segmentation fault";
 
 bool StartWith(const std::string &word, const std::string &prefix) {
-  if (prefix.size() == 0) {
+  if (prefix.empty()) {
     return true;
   }
   if (word.size() < prefix.size()) {
@@ -62,5 +62,6 @@ bool ReadWord(string &word, FILE* fin) {
     }
     word.push_back(ch);
   }
+
   return true;
 }

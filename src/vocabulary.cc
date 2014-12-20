@@ -2,6 +2,10 @@
 
 using namespace std;
 
+namespace {
+  const int kNoParent = -1;
+}
+
 Vocabulary::Vocabulary() : train_word_count_(0) {
 }
 
@@ -65,20 +69,22 @@ void Vocabulary::HuffmanEncoding() {
     priority_queue<HuffmanTreeNode> heap;
     // Firstly, every word in vocabulary is a huffman tree node
     // Secondly, every tree node should put into a heap
+    // TODO: change to AUTO
     for (auto iter = vocab_.begin(); iter != vocab_.end(); ++iter) {
         int node_idx = nodes.size();
+        //TODO: change to AUTO
         nodes.emplace_back(HuffmanTreeNode(iter->freq, kNoParent, node_idx));
         heap.push(nodes.back());
     }
 
     while (!heap.empty()) {
         // retrieve 2 nodes from heap every time
-        auto min_node1 = heap.top();
+        const auto &min_node1 = heap.top();
         heap.pop();
         if (heap.empty()) { //if heap is empty means huffman tree has built
             break;
         }
-        auto min_node2 = heap.top();
+        const auto &min_node2 = heap.top();
         heap.pop();
 
         // merge two minimum frequency nodes to a new huffman tree node
@@ -139,7 +145,7 @@ void Vocabulary::ReduceVocab() {
     printf("Recuded Vocabulary Size = %lu\n", vocab_.size());
 }
 
-int Vocabulary::GetWordIndex(const string &word) {
+int Vocabulary::GetWordIndex(const string &word) const {
     if (word2pos_.find(word) != word2pos_.end()) {
         return word2pos_[word];
     }

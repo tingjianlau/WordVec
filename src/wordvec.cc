@@ -2,12 +2,16 @@
 
 using namespace std;
 
+namespace {
+  const real start_alpha_ = 0.025;
+}
+
 WordVec::WordVec() {
   syn_in_ = syn_out_ = NULL;
   word_count_total_ = 0;
 }
 
-WordVec::WordVec(Options options) : opt_(options) {
+WordVec::WordVec(const Options &options) : opt_(options) {
   syn_in_ = syn_out_ = NULL;
   word_count_total_ = 0;
 }
