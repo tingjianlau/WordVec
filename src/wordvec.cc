@@ -77,7 +77,7 @@ void WordVec::Train(const vector<string> &files) {
 // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
 void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
     real neu1e[], int window_size, real alpha) {
-  cHECK(voc_ != nullptr);
+  CHECK(voc_ != nullptr);
   CHECK(syn_in_ != nullptr);
   CHECK(syn_out_ != nullptr);
 
@@ -142,7 +142,7 @@ void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
 // Training Skip-Gram model with one sentence, alpha is the learning rate
 void WordVec::TrainSkipGramModel(const vector<int> &sentence, real neu1e[],
     int window_size, real alpha) {
-  cHECK(voc_ != nullptr);
+  CHECK(voc_ != nullptr);
   CHECK(syn_in_ != nullptr);
   CHECK(syn_out_ != nullptr);
 

@@ -1,13 +1,14 @@
 WordVec
 =======
 
-WordVec是根据Google发布的word2vec个人理解后的一个c++重构版本。采用OpenMP的方式进行多线程训练。
+WordVec是根据Google发布的word2vec个人学习理解后的一个c++重构版本。采用OpenMP的方式进行多线程训练。 代码逻辑会比原版本更加清晰易懂。
 
 ##前置准备
 
 * g++ 4.5.1 以上
 * cmake 2.6 以上
 * gflags 2.1.1 以上
+* gtest 1.7.0 以上
 
 新建build目录并对项目进行编译
 		
@@ -36,6 +37,7 @@ WordVec是根据Google发布的word2vec个人理解后的一个c++重构版本�
 
 
 ##参数说明
+  -iter       迭代训练文本的次数
 	-train			输入是训练文本所在路径
 	-output			输出的词向量的二进制文本
 	-hidden_size	神经网络隐含结点的数量，默认100
@@ -54,7 +56,7 @@ WordVec是根据Google发布的word2vec个人理解后的一个c++重构版本�
 	
 	$BIN_DIR/WordVec  	-train $DATA_DIR 
 						-output $VECTOR_DATA 
-					   	-prefix text8_
+					  -prefix text8_
 						-hidden_size 200 
 						-window 5 
 						-threads 4 
@@ -69,7 +71,7 @@ WordVec是根据Google发布的word2vec个人理解后的一个c++重构版本�
 * 当前版本实现去掉了负采样(Negative Sampling)的部分,因为作者默认就没有开启，后人在实验过程中发现负采样并没有对效果有明显提升，开启负采样会增大训练时间。
 * 当前版本实现去掉了原作者种存在的随机因素，如滑动窗口的过程中随机收缩窗口的大小，去掉后实验表明不影响效果。
 * 建议使用cbow模型进行训练，速度比skip-gram快很多，对低频词的发现逊于skip-gram。
-* 去掉了指数表的预处理，使得代码在算法逻辑上更加清晰易懂。
+* 为了简化代码复杂度,使逻辑清晰易懂，去掉了指数表的预处理,但降低了效率
 
 
 

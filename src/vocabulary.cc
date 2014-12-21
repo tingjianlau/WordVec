@@ -60,12 +60,12 @@ void Vocabulary::HuffmanEncoding() {
 
   while (!heap.empty()) {
     // retrieve 2 nodes from heap every time
-    const auto& min_node1 = heap.top();
+    const auto min_node1 = heap.top();
     heap.pop();
     if (heap.empty()) { //if heap is empty means huffman tree has built
       break;
     }
-    const auto& min_node2 = heap.top();
+    const auto min_node2 = heap.top();
     heap.pop();
 
     // merge two minimum frequency nodes to a new huffman tree node
