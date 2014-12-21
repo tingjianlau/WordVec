@@ -15,10 +15,6 @@
 #include "utils.h"
 #include "vocabulary.h"
 
-// TODO: Use vector instead of new an array.
-// TODO: Mark some methods as private if you don't expect your users
-//       to use it.
-// TODO: Disable copy constructor and assign operation.
 class WordVec {
  public:
   WordVec();
@@ -27,10 +23,15 @@ class WordVec {
 
   virtual ~WordVec();
 
-  void InitializeNetwork();
-
   void Train(const std::vector<std::string> &files);
 
+  void TrainModelWithFile(const std::string &file_name);
+
+  //save the word vector(the input synapses) to file
+  void SaveVector(const std::string &output_file, bool binary_format) const;
+
+ private:
+  void InitializeNetwork();
   // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
   void TrainCBOWModel(const std::vector<int> &sentence, real neu1[],
                       real neu1e[], int window_size, real alpha);
@@ -39,14 +40,10 @@ class WordVec {
   void TrainSkipGramModel(const std::vector<int> &sentence, real neu1e[],
                           int window_size, real alpha);
 
-  void TrainModelWithFile(const std::string &file_name);
+  WordVec(const WordVec&);  // no copying!
 
-  //save the word vector(the input synapses) to file
-  void SaveVector(const std::string &output_file, bool binary_format) const;
+  void operator=(const WordVec&);  // no copying!
 
-  // sigmoid function
-
- private:
   std::unique_ptr<Vocabulary> voc_;
 
   real* syn_in_;  //synapses for input layer

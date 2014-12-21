@@ -47,9 +47,7 @@ void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files
     const std::string &prefix) {
   files.clear();
   struct dirent* ent = NULL;
-  // TODO: Delete pointers.
-  DIR *pDir;
-  pDir = opendir(folder_path.c_str());
+  DIR *pDir = opendir(folder_path.c_str());
   while ((ent = readdir(pDir)) != NULL) {
     if (ent->d_type == DT_REG) {
       const std::string filename(ent->d_name);
@@ -61,6 +59,7 @@ void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files
       files.push_back(file);
     }
   }
+  delete pDir;
 }
 
 // create options from flags

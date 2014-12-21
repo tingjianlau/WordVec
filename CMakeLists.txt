@@ -54,10 +54,11 @@ ADD_EXECUTABLE(distance "${SRC_PATH}/distance.cc")
 ######################
 set(TEST_SOURCE_FILES
   ${SRC_PATH}/main_test.cc
+  ${SRC_PATH}/vocabulary_test.cc
 )
 enable_testing()
 
-add_executable(tmain ${TEST_SOURCE_FILES})
-target_link_libraries(tmain wv ${LIBS})
+add_executable(vocabulary_test ${SRC_PATH}/vocabulary_test.cc)
+target_link_libraries(vocabulary_test wv ${LIBS})
 
-add_test(NAME wordvec_test COMMAND tmain)
+add_test(NAME TestVocabulary COMMAND vocabulary_test)

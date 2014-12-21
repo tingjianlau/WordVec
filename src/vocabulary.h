@@ -75,6 +75,10 @@ class Vocabulary {
   }
 
  private:
+  Vocabulary(const Vocabulary&);  // no copying!
+
+  void operator=(const Vocabulary&);  // no copying!
+
   std::unordered_map<std::string, int> word2pos_;
 
   std::vector<Word> vocab_;
