@@ -42,21 +42,22 @@ bool StrStartWith(const std::string &word, const std::string &prefix) {
   return true;
 }
 
-// a simple file operator to get all the files under given folder
+// A simple file operator to get all the files under given folder
 void GetAllFiles(const std::string &folder_path, std::vector<std::string> &files,
     const std::string &prefix) {
   files.clear();
   struct dirent* ent = NULL;
+  // TODO: Delete pointers.
   DIR *pDir;
   pDir = opendir(folder_path.c_str());
   while ((ent = readdir(pDir)) != NULL) {
     if (ent->d_type == DT_REG) {
-      std::string filename(ent->d_name);
+      const std::string filename(ent->d_name);
       if (!StrStartWith(filename, prefix)) {
         continue;
       }
       char last_ch = folder_path.back();
-      std::string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
+      const std::string file = folder_path + (last_ch == '/' ? "" : "/") + filename;
       files.push_back(file);
     }
   }
@@ -84,7 +85,7 @@ bool PopulateOptions(Options &options) {
   LOG(INFO) << "windows_size = " << options.windows_size << endl;
   LOG(INFO) << "use_hierachical_softmax = " << options.use_hierachical_softmax
      << endl;
-  LOG(INFO) << "use_negative_sampling = " << options.use_negative_sampling 
+  LOG(INFO) << "use_negative_sampling = " << options.use_negative_sampling
      << endl;
 
   return true;

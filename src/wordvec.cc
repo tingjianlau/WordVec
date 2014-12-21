@@ -9,7 +9,7 @@ using namespace std;
 
 namespace {
 const real start_alpha_ = 0.025;
-  
+
 inline real Sigmoid(double x) {
   return exp(x) / (1 + exp(x));
 }
@@ -31,11 +31,12 @@ WordVec::~WordVec() {
 }
 
 void WordVec::InitializeNetwork() {
+  CHECK(voc_ != nullptr);
   // Initialize synapses for input layer
-  syn_in_ = new real[voc_.Size() * opt_.hidden_layer_size];
+  syn_in_ = new real[voc_->Size() * opt_.hidden_layer_size];
 
   for (int h = 0; h < opt_.hidden_layer_size; ++h) {
-    for (int xi = 0; xi < voc_.Size(); xi++) {
+    for (int xi = 0; xi < voc_->Size(); xi++) {
       // use random value (0,1) to initialize the input synapses
       syn_in_[xi * opt_.hidden_layer_size + h] = RandReal();
     }
@@ -43,8 +44,8 @@ void WordVec::InitializeNetwork() {
 
   // Initialize synapses for output layer
   if (opt_.use_hierachical_softmax) {
-    syn_out_ = new real[voc_.Size() * opt_.hidden_layer_size];
-    memset(syn_out_, 0, voc_.Size() * opt_.hidden_layer_size * sizeof(real));
+    syn_out_ = new real[voc_->Size() * opt_.hidden_layer_size];
+    memset(syn_out_, 0, voc_->Size() * opt_.hidden_layer_size * sizeof(real));
   }
 // TODO: Negative Sampling Network Initialize
 // Negative Samlpling is one of the trick of word2vec, but will not improve
@@ -53,10 +54,9 @@ void WordVec::InitializeNetwork() {
 
 void WordVec::Train(const vector<string> &files) {
   //loading vocabulary needs to read all files
-  unique_ptr<Vocabulary> p_vocab(Vocabulary::CreateVocabFromTrainFiles(files));
-  voc_ = *p_vocab.get();
-  voc_.ReduceVocab();
-  voc_.HuffmanEncoding();
+  voc_.reset(Vocabulary::CreateVocabFromTrainFiles(files));
+  voc_->ReduceVocab();
+  voc_->HuffmanEncoding();
 
   InitializeNetwork();
   word_count_total_ = 0;
@@ -71,12 +71,16 @@ void WordVec::Train(const vector<string> &files) {
   double cost_time = omp_get_wtime() - start;
   printf("Training Time: %lf sec\n", cost_time);
   printf("Training Speed: words/thread/sec: %.1fk\n",
-      voc_.GetTrainWordCount() / cost_time / opt_.thread_num / 1000);
+      voc_->GetTrainWordCount() / cost_time / opt_.thread_num / 1000);
 }
 
 // Training Continous Bag-of-Words model with one sentence, alpha is the learning rate
 void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
     real neu1e[], int window_size, real alpha) {
+  cHECK(voc_ != nullptr);
+  CHECK(syn_in_ != nullptr);
+  CHECK(syn_out_ != nullptr);
+
   int sentence_len = sentence.size();
   //iterate every word in a sentence
   for (int w_target_idx = 0; w_target_idx < sentence_len; ++w_target_idx) {
@@ -103,16 +107,16 @@ void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
     // Hierachical softmax
     if (opt_.use_hierachical_softmax) {
       // iterate every Huffman code of the word to be predict
-      for (int c_idx = 0; c_idx < voc_[target_word].code.size(); ++c_idx) {
+      for (int c_idx = 0; c_idx < (*voc_)[target_word].code.size(); ++c_idx) {
         real f = 0;
-        int xo = voc_[target_word].output_node_id[c_idx] * opt_.hidden_layer_size;
+        int xo = (*voc_)[target_word].output_node_id[c_idx] * opt_.hidden_layer_size;
         for (int h = 0; h < opt_.hidden_layer_size; ++h) {
           f += neu1[h] * syn_out_[h + xo];
         }
 
         f = Sigmoid(f);
         //real gradient = (1 - _voc[target_word].code[c_idx] - f) ;
-        real gradient = voc_[target_word].code[c_idx] - f;
+        real gradient = (*voc_)[target_word].code[c_idx] - f;
         for (int h = 0; h < opt_.hidden_layer_size; ++h) {
           neu1e[h] += alpha * gradient * syn_out_[h + xo];
         }
@@ -138,6 +142,10 @@ void WordVec::TrainCBOWModel(const vector<int> &sentence, real neu1[],
 // Training Skip-Gram model with one sentence, alpha is the learning rate
 void WordVec::TrainSkipGramModel(const vector<int> &sentence, real neu1e[],
     int window_size, real alpha) {
+  cHECK(voc_ != nullptr);
+  CHECK(syn_in_ != nullptr);
+  CHECK(syn_out_ != nullptr);
+
   int sentence_len = sentence.size();
   //iterate every word in sentence
   for (int w_input_idx = 0; w_input_idx < sentence_len; ++w_input_idx) {
@@ -159,17 +167,17 @@ void WordVec::TrainSkipGramModel(const vector<int> &sentence, real neu1e[],
       // hierachical softmax
       if (opt_.use_hierachical_softmax) {
         // iterate every Huffman code of the word to be predict
-        for (int c_idx = 0; c_idx < voc_[target_word].code.size();
+        for (int c_idx = 0; c_idx < (*voc_)[target_word].code.size();
              ++c_idx) {
           real f = 0;
-          int xo = voc_[target_word].output_node_id[c_idx] * opt_.hidden_layer_size;
+          int xo = (*voc_)[target_word].output_node_id[c_idx] * opt_.hidden_layer_size;
           for (int h = 0; h < opt_.hidden_layer_size; ++h) {
             f += syn_in_[h + xi] * syn_out_[h + xo];
           }
 
           f = Sigmoid(f);
           // the gradient formular for word2vec
-          real gradient = (1 - voc_[target_word].code[c_idx] - f);
+          real gradient = (1 - (*voc_)[target_word].code[c_idx] - f);
           for (int h = 0; h < opt_.hidden_layer_size; ++h) {
             neu1e[h] += alpha * gradient * syn_out_[h + xo];
           }
@@ -203,7 +211,7 @@ void WordVec::TrainModelWithFile(const string &file_name) {
   vector<int> sentence;
   string word;
 
-  int train_word_total = voc_.GetTrainWordCount() * opt_.iter;
+  int train_word_total = voc_->GetTrainWordCount() * opt_.iter;
 
   while (!feof(fi)) {
     if (word_count_curr_thread - last_word_count_curr_thread > 10000) {
@@ -228,7 +236,7 @@ void WordVec::TrainModelWithFile(const string &file_name) {
       // read enough words to consititude a sentence
       while (sentence.size() < opt_.max_sentence_size && !feof(fi)) {
         bool eol = ReadWord(word, fi);
-        int word_idx = voc_.GetWordIndex(word);
+        int word_idx = voc_->GetWordIndex(word);
         if (word_idx == -1) {
           continue;
         }
@@ -254,13 +262,14 @@ void WordVec::TrainModelWithFile(const string &file_name) {
 }
 
 //save the word vector(the input synapses) to file
-void WordVec::SaveVector(const string &output_file, bool binary_format = true) {
+void WordVec::SaveVector(const string &output_file, bool binary_format = true) const {
+  // TODO: Check succeed to open file or not.
   FILE* fo = fopen(output_file.c_str(), "wb");
   FileCloser fcloser(fo);
-  fprintf(fo, "%lld %lld\n", (long long) voc_.Size(),
+  fprintf(fo, "%lld %lld\n", (long long) voc_->Size(),
       (long long) opt_.hidden_layer_size);
-  for (int i = 0; i < voc_.Size(); ++i) {
-    fprintf(fo, "%s ", voc_[i].word.c_str());
+  for (int i = 0; i < voc_->Size(); ++i) {
+    fprintf(fo, "%s ", (*voc_)[i].word.c_str());
     for (int j = 0; j < opt_.hidden_layer_size; ++j) {
       if (binary_format) {
         fwrite(&syn_in_[i * opt_.hidden_layer_size + j], sizeof(real), 1, fo);

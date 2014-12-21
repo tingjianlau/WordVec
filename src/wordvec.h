@@ -9,11 +9,16 @@
 #define WORDVEC_H_
 
 #include <cstdio>
+#include <memory>
 
 #include "options.h"
 #include "utils.h"
 #include "vocabulary.h"
 
+// TODO: Use vector instead of new an array.
+// TODO: Mark some methods as private if you don't expect your users
+//       to use it.
+// TODO: Disable copy constructor and assign operation.
 class WordVec {
  public:
   WordVec();
@@ -37,12 +42,12 @@ class WordVec {
   void TrainModelWithFile(const std::string &file_name);
 
   //save the word vector(the input synapses) to file
-  void SaveVector(const std::string &output_file, bool binary_format);
+  void SaveVector(const std::string &output_file, bool binary_format) const;
 
   // sigmoid function
 
  private:
-  Vocabulary voc_;
+  std::unique_ptr<Vocabulary> voc_;
 
   real* syn_in_;  //synapses for input layer
 

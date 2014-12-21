@@ -24,8 +24,7 @@ const int kNoParent = -1;
 Vocabulary::Vocabulary() : train_word_count_(0) {
 }
 
-Vocabulary::~Vocabulary() {
-}
+Vocabulary::~Vocabulary() = default;
 
 Word &Vocabulary::operator[](size_t index) {
   CHECK_GE(index, 0);
@@ -61,19 +60,19 @@ void Vocabulary::HuffmanEncoding() {
 
   while (!heap.empty()) {
     // retrieve 2 nodes from heap every time
-    const auto min_node1 = heap.top();
+    const auto& min_node1 = heap.top();
     heap.pop();
     if (heap.empty()) { //if heap is empty means huffman tree has built
       break;
     }
-    const auto min_node2 = heap.top();
+    const auto& min_node2 = heap.top();
     heap.pop();
 
     // merge two minimum frequency nodes to a new huffman tree node
     // at first its parent is -1
     int new_node_idx = nodes.size();
     auto new_node = HuffmanTreeNode(min_node1.freq + min_node2.freq, kNoParent,
-        new_node_idx);
+                                    new_node_idx);
     nodes.push_back(new_node);
 
     heap.push(new_node);
@@ -86,7 +85,7 @@ void Vocabulary::HuffmanEncoding() {
   }
   nodes.back().code = 1;  // assign the huffman ROOT code
   // encoding every word in vocabulary
-  int root_index = nodes.back().idx;
+  const int root_index = nodes.back().idx;
   for (int i = 0; i < vocab_.size(); ++i) {
     int idx = i;
     // Generate the Huffman code from leaf to root, it's the same as from
@@ -141,6 +140,11 @@ Vocabulary *Vocabulary::CreateVocabFromTrainFiles(const std::vector<std::string>
   for (const auto &f : files) {
     LOG(INFO) << "loading " << f.c_str() << endl;
     FILE *fin = fopen(f.c_str(), "r");
+    if (fin == nullptr) {
+      LOG(ERROR) << "fail to open " << f << endl;
+      continue;
+    }
+
     FileCloser fcloser(fin);
     string word;
     while (!feof(fin)) {
